@@ -1,0 +1,102 @@
+[
+  {
+    "id": "1",
+    "title": "家庭安全隐患排查清单",
+    "excerpt": "对于充满好奇心和活力的孩子们来说，家是他们探索世界的第一站，但也可能隐藏着意想不到的危险...",
+    "content": "\n      <h2>家庭安全的重要性</h2>\n      <p>对于充满好奇心和活力的孩子们来说，家是他们探索世界的第一站，但也可能隐藏着意想不到的危险。作为家长，我们需要时刻保持警觉，定期进行家庭安全隐患排查。</p>\n      \n      <h3>客厅安全检查</h3>\n      <p>客厅是家庭活动的主要场所，也是孩子们经常玩耍的地方。以下是客厅安全检查的要点：</p>\n      <ul>\n        <li>检查电源插座是否有安全保护盖</li>\n        <li>确保电线整理妥当，避免绊倒</li>\n        <li>检查家具尖角是否有防护措施</li>\n        <li>确保重物放置稳固</li>\n      </ul>\n      \n      <div class=\"video-container\" data-video-id=\"safety-demo-1\">\n        <video-player \n          src=\"https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4\"\n          title=\"客厅安全检查演示\"\n          poster=\"https://picsum.photos/seed/safety1/800/450\"\n        ></video-player>\n      </div>\n      \n      <h3>厨房安全防护</h3>\n      <p>厨房是家中最危险的区域之一，需要特别注意以下几点：</p>\n      <ul>\n        <li>安装儿童安全锁</li>\n        <li>收好刀具和尖锐物品</li>\n        <li>检查燃气设备</li>\n        <li>保持地面干燥</li>\n      </ul>\n      \n      <div class=\"video-container\" data-video-id=\"kitchen-safety-1\">\n        <video-player \n          src=\"https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_2mb.mp4\"\n          title=\"厨房安全防护指南\"\n          poster=\"https://picsum.photos/seed/kitchen1/800/450\"\n        ></video-player>\n      </div>\n      \n      <h3>总结</h3>\n      <p>家庭安全需要我们持续关注和维护。定期进行安全检查，及时发现和消除隐患，为孩子创造一个安全的成长环境。</p>\n    ",
+    "author": "智护童行专家团队",
+    "publishedAt": "2025-01-15",
+    "readTime": "8分钟",
+    "views": "2300",
+    "rating": "4.8",
+    "category": "safety",
+    "tags": [
+      "家庭安全",
+      "儿童防护",
+      "安全检查"
+    ],
+    "image": "https://picsum.photos/seed/safety/800/400",
+    "status": "published",
+    "createdAt": "2025-01-15T10:00:00Z",
+    "updatedAt": "2025-01-15T10:00:00Z"
+  },
+  {
+    "id": "2",
+    "title": "儿童营养均衡饮食指南",
+    "excerpt": "儿童正处于快速生长发育期，营养均衡对他们的身体和智力发展至关重要...",
+    "content": "\n      <h2>营养均衡的重要性</h2>\n      <p>儿童正处于快速生长发育期，营养均衡对他们的身体和智力发展至关重要。</p>\n      \n      <div class=\"video-container\" data-video-id=\"nutrition-intro\">\n        <video-player \n          src=\"https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4\"\n          title=\"儿童营养基础知识\"\n          poster=\"https://picsum.photos/seed/nutrition1/800/450\"\n        ></video-player>\n      </div>\n      \n      <h3>每日营养需求</h3>\n      <p>根据年龄段的不同，儿童的营养需求也有所差异...</p>\n    ",
+    "author": "营养专家李医生",
+    "publishedAt": "2025-01-10",
+    "readTime": "12分钟",
+    "views": "1800",
+    "rating": "4.9",
+    "category": "life",
+    "tags": [
+      "营养",
+      "饮食",
+      "健康"
+    ],
+    "image": "https://picsum.photos/seed/food/800/400",
+    "status": "published",
+    "createdAt": "2025-01-10T10:00:00Z",
+    "updatedAt": "2025-01-10T10:00:00Z"
+  },
+  {
+    "id": "1754210001292",
+    "title": "持久化存储测试文章",
+    "excerpt": "这是一个测试文章，用于验证文章数据是否能够正确保存到持久化存储系统中。",
+    "content": "<h2>🔧 持久化存储测试</h2><p>这是一个专门用于测试文章持久化存储功能的测试文章。</p><h3>测试目标：</h3><ul><li>验证文章能够成功保存到文件系统</li><li>确认文章在服务器重启后仍然存在</li><li>测试文章列表能够正确显示新创建的文章</li></ul><p><strong>如果您能在文章管理页面看到这篇文章，说明持久化存储功能正常工作！</strong></p>",
+    "category": "life",
+    "tags": [
+      "持久化",
+      "存储",
+      "测试",
+      "验证"
+    ],
+    "image": "https://picsum.photos/seed/1754210001292/800/400",
+    "status": "published",
+    "author": "系统管理员",
+    "publishedAt": "2025-08-03",
+    "readTime": "1分钟",
+    "views": "0",
+    "rating": "0",
+    "createdAt": "2025-08-03T08:33:21.292Z",
+    "updatedAt": "2025-08-03T08:33:21.292Z"
+  },
+  {
+    "id": "1754210175249",
+    "title": "测试",
+    "excerpt": "123",
+    "content": "321321",
+    "category": "life",
+    "tags": [
+      "安全"
+    ],
+    "image": "https://i.postimg.cc/KY4Vw0Mg/rick-and-morty-s4-image.webp",
+    "status": "published",
+    "author": "系统管理员",
+    "publishedAt": "2025-08-03",
+    "readTime": "1分钟",
+    "views": "0",
+    "rating": "0",
+    "createdAt": "2025-08-03T08:36:15.249Z",
+    "updatedAt": "2025-08-03T08:36:15.249Z"
+  },
+  {
+    "id": "1754211385748",
+    "title": "测试123",
+    "excerpt": "123131",
+    "content": "123",
+    "category": "life",
+    "tags": [],
+    "image": "https://i.postimg.cc/KY4Vw0Mg/rick-and-morty-s4-image.webp",
+    "status": "published",
+    "author": "系统管理员",
+    "publishedAt": "2025-08-03",
+    "readTime": "1分钟",
+    "views": "0",
+    "rating": "0",
+    "createdAt": "2025-08-03T08:56:25.748Z",
+    "updatedAt": "2025-08-03T08:56:25.748Z"
+  }
+]

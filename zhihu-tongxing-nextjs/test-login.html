@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录功能测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-form {
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>管理员登录功能测试</h1>
+        
+        <div class="test-form">
+            <h3>测试1: 使用用户名 "admin" 登录</h3>
+            <div class="form-group">
+                <label>用户名:</label>
+                <input type="text" id="username1" value="admin">
+            </div>
+            <div class="form-group">
+                <label>密码:</label>
+                <input type="password" id="password1" value="Admin@2025!Secure#">
+            </div>
+            <button onclick="testLogin1()">测试登录</button>
+            <div id="result1" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="test-form">
+            <h3>测试2: 使用邮箱地址登录</h3>
+            <div class="form-group">
+                <label>邮箱:</label>
+                <input type="email" id="username2" value="admin@zhihutongxing.com">
+            </div>
+            <div class="form-group">
+                <label>密码:</label>
+                <input type="password" id="password2" value="Admin@2025!Secure#">
+            </div>
+            <button onclick="testLogin2()">测试登录</button>
+            <div id="result2" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="test-form">
+            <h3>测试3: 错误密码测试</h3>
+            <div class="form-group">
+                <label>用户名:</label>
+                <input type="text" id="username3" value="admin">
+            </div>
+            <div class="form-group">
+                <label>密码:</label>
+                <input type="password" id="password3" value="wrongpassword">
+            </div>
+            <button onclick="testLogin3()">测试登录</button>
+            <div id="result3" class="result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        async function testLogin(testNum, username, password) {
+            const resultDiv = document.getElementById(`result${testNum}`);
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = '正在测试...';
+            resultDiv.className = 'result';
+
+            try {
+                // 模拟前端登录逻辑
+                let loginEmail = username;
+                
+                // 如果输入的是用户名 "admin"，映射到对应的邮箱地址
+                if (username.toLowerCase() === 'admin') {
+                    loginEmail = 'admin@zhihutongxing.com';
+                }
+                
+                // 如果输入的不包含@符号，假设是用户名，尝试添加默认域名
+                if (!loginEmail.includes('@')) {
+                    loginEmail = `${loginEmail}@zhihutongxing.com`;
+                }
+
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: loginEmail,
+                        password: password,
+                    }),
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.data) {
+                    if (data.data.role !== 'admin') {
+                        resultDiv.textContent = `错误: 权限不足，只有管理员可以访问`;
+                        resultDiv.className = 'result error';
+                        return;
+                    }
+
+                    resultDiv.textContent = `✅ 登录成功！
+用户信息:
+- ID: ${data.data.id}
+- 邮箱: ${data.data.email}
+- 姓名: ${data.data.name}
+- 角色: ${data.data.role}
+- 使用的邮箱: ${loginEmail}`;
+                    resultDiv.className = 'result success';
+                } else {
+                    resultDiv.textContent = `❌ 登录失败: ${data.error || '未知错误'}`;
+                    resultDiv.className = 'result error';
+                }
+            } catch (err) {
+                resultDiv.textContent = `❌ 网络错误: ${err.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        function testLogin1() {
+            const username = document.getElementById('username1').value;
+            const password = document.getElementById('password1').value;
+            testLogin(1, username, password);
+        }
+
+        function testLogin2() {
+            const username = document.getElementById('username2').value;
+            const password = document.getElementById('password2').value;
+            testLogin(2, username, password);
+        }
+
+        function testLogin3() {
+            const username = document.getElementById('username3').value;
+            const password = document.getElementById('password3').value;
+            testLogin(3, username, password);
+        }
+    </script>
+</body>
+</html>

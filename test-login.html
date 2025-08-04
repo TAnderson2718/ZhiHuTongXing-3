@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录功能测试</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        input { padding: 8px; margin: 5px; border: 1px solid #ccc; border-radius: 3px; width: 200px; }
+        .form-group { margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>智护童行 - 登录功能测试</h1>
+    
+    <div class="info">
+        <h3>测试说明</h3>
+        <p>这个页面用于测试登录功能是否正常工作。请按照以下步骤进行测试：</p>
+        <ol>
+            <li>点击"测试登录页面加载"按钮，确认登录页面可以正常访问</li>
+            <li>使用测试账户进行登录测试</li>
+            <li>测试错误凭据的处理</li>
+        </ol>
+    </div>
+
+    <div class="form-group">
+        <h3>自动化测试</h3>
+        <button onclick="testLoginPage()">测试登录页面加载</button>
+        <button onclick="testValidLogin()">测试有效登录</button>
+        <button onclick="testInvalidLogin()">测试无效登录</button>
+        <button onclick="testUserInfo()">测试用户信息获取</button>
+        <button onclick="testLogout()">测试登出</button>
+    </div>
+
+    <div class="form-group">
+        <h3>手动登录测试</h3>
+        <div>
+            <input type="email" id="email" placeholder="邮箱" value="test@example.com">
+        </div>
+        <div>
+            <input type="password" id="password" placeholder="密码" value="123456">
+        </div>
+        <div>
+            <button onclick="manualLogin()">手动登录测试</button>
+        </div>
+    </div>
+
+    <div id="results"></div>
+
+    <script>
+        const API_BASE = 'http://localhost:3002';
+        let sessionCookie = '';
+
+        function addResult(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong>: ${message}`;
+            results.appendChild(div);
+            results.scrollTop = results.scrollHeight;
+        }
+
+        async function testLoginPage() {
+            try {
+                const response = await fetch(`${API_BASE}/login`);
+                if (response.ok) {
+                    addResult('✅ 登录页面加载成功 (状态码: 200)', 'success');
+                } else {
+                    addResult(`❌ 登录页面加载失败 (状态码: ${response.status})`, 'error');
+                }
+            } catch (error) {
+                addResult(`❌ 登录页面测试失败: ${error.message}`, 'error');
+            }
+        }
+
+        async function testValidLogin() {
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'test@example.com',
+                        password: '123456'
+                    }),
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    addResult(`✅ 有效登录测试成功: ${data.message}`, 'success');
+                    addResult(`用户信息: ${data.data.name} (${data.data.email})`, 'info');
+                } else {
+                    addResult(`❌ 有效登录测试失败: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                addResult(`❌ 有效登录测试失败: ${error.message}`, 'error');
+            }
+        }
+
+        async function testInvalidLogin() {
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'test@example.com',
+                        password: 'wrongpassword'
+                    }),
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+                if (!data.success) {
+                    addResult(`✅ 无效登录测试成功: 正确拒绝了错误凭据`, 'success');
+                    addResult(`错误信息: ${data.error}`, 'info');
+                } else {
+                    addResult(`❌ 无效登录测试失败: 应该拒绝错误凭据`, 'error');
+                }
+            } catch (error) {
+                addResult(`❌ 无效登录测试失败: ${error.message}`, 'error');
+            }
+        }
+
+        async function testUserInfo() {
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/me`, {
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    addResult(`✅ 用户信息获取成功: ${data.data.name}`, 'success');
+                } else {
+                    addResult(`❌ 用户信息获取失败: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                addResult(`❌ 用户信息测试失败: ${error.message}`, 'error');
+            }
+        }
+
+        async function testLogout() {
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/logout`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    addResult(`✅ 登出测试成功: ${data.message}`, 'success');
+                } else {
+                    addResult(`❌ 登出测试失败: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                addResult(`❌ 登出测试失败: ${error.message}`, 'error');
+            }
+        }
+
+        async function manualLogin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password }),
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    addResult(`✅ 手动登录成功: ${data.data.name} (${data.data.email})`, 'success');
+                } else {
+                    addResult(`❌ 手动登录失败: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                addResult(`❌ 手动登录失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 页面加载时显示欢迎信息
+        window.onload = function() {
+            addResult('🚀 登录功能测试页面已加载，可以开始测试', 'info');
+            addResult('📝 测试账户: test@example.com / 123456', 'info');
+            addResult('📝 管理员账户: admin@zhihutongxing.com / Admin@2025!Secure#', 'info');
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,1547 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智护童行 - 互动原型</title>
+    
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .hero-gradient {
+            background: linear-gradient(135deg, #a8e6cf 0%, #dcedc1 100%);
+        }
+        .hall-card, .assessment-card, .game-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .hall-card:hover, .assessment-card:hover, .game-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .page, .modal-overlay {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .modal-content {
+             animation: fadeInScale 0.5s ease-in-out;
+        }
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: translateY(20px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .tab-button.active, .course-tab-button.active {
+            border-color: #10b981; /* emerald-500 */
+            color: #059669; /* emerald-600 */
+            background-color: #ecfdf5; /* emerald-50 */
+        }
+        .archive-tab-button.active {
+            border-color: #3b82f6; /* blue-500 */
+            color: #2563eb; /* blue-600 */
+            background-color: #eff6ff; /* blue-50 */
+        }
+        /* Progress bar style */
+        .progress-bar-bg { background-color: #e5e7eb; }
+        .progress-bar-fill { background-color: #34d399; transition: width 0.5s ease-in-out; }
+        /* Admin Sidebar Active Style */
+        .admin-nav-link.active {
+             background-color: #374151; /* gray-700 */
+             font-weight: 600;
+        }
+        /* Article Content Styling */
+        .prose h2 { font-size: 1.5rem; font-weight: 700; margin-top: 2em; margin-bottom: 1em; }
+        .prose h3 { font-size: 1.25rem; font-weight: 600; margin-top: 1.5em; margin-bottom: 0.75em; }
+        .prose p { line-height: 1.75; margin-bottom: 1.25em; }
+        .prose ul { list-style-type: disc; padding-left: 1.5em; margin-bottom: 1.25em; }
+        .prose li { margin-bottom: 0.5em; }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <!-- Container for all pages -->
+    <div>
+        <!-- ====================================================================== -->
+        <!-- Homepage Section -->
+        <!-- ====================================================================== -->
+        <div id="home-page" class="page">
+            <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
+                <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+                    <a href="javascript:void(0);" class="go-home flex items-center space-x-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-teal-500"><path d="M17 14v-2a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v2"/><path d="M12 18c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"/><path d="M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2s10 4.477 10 10z"/><path d="m9.5 9.5 5 5"/><path d="m14.5 9.5-5 5"/></svg>
+                        <span class="text-2xl font-bold text-gray-800">智护童行</span>
+                    </a>
+                    <nav class="hidden md:flex space-x-8">
+                        <a href="javascript:void(0);" class="go-features text-gray-600 hover:text-teal-600 transition-colors">平台特色</a>
+                        <a href="javascript:void(0);" class="go-community text-gray-600 hover:text-teal-600 transition-colors">家长社区</a>
+                    </nav>
+                    <div><button class="go-account bg-teal-500 text-white font-semibold px-5 py-2 rounded-full hover:bg-teal-600 transition-all shadow-sm">登录 / 注册</button></div>
+                </div>
+            </header>
+            <main>
+                <section class="hero-gradient py-20 md:py-32">
+                    <div class="container mx-auto px-6 text-center">
+                        <h1 class="text-4xl md:text-6xl font-bold text-gray-800 leading-tight mb-4">赋能家庭，科学照护每一步</h1>
+                        <p class="text-lg md:text-xl text-gray-700 max-w-3xl mx-auto mb-8">“智护童行”是您身边的家庭照护专家，集评估、科普、体验与支持于一体，陪伴您和孩子共同成长。</p>
+                    </div>
+                </section>
+                <section id="halls" class="py-16 md:py-24 bg-white">
+                    <div class="container mx-auto px-6">
+                        <div class="text-center mb-12">
+                            <h2 class="text-3xl md:text-4xl font-bold">探索五大核心功能展馆</h2>
+                            <p class="text-gray-600 mt-2 max-w-2xl mx-auto">从自我评估到专业学习，我们为您提供一站式家庭照护解决方案。</p>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            <div class="hall-card bg-gray-50 rounded-2xl p-8 flex flex-col items-center text-center border border-gray-200">
+                                <div class="bg-blue-100 p-4 rounded-full mb-4"><i data-lucide="clipboard-check" class="w-8 h-8 text-blue-500"></i></div>
+                                <h3 class="text-xl font-bold mb-2">能力评估与成长记录馆</h3>
+                                <p class="text-gray-600 flex-grow">科学评估您的家庭照护能力，获取个性化建议，记录孩子每一个成长瞬间。</p>
+                                <a href="javascript:void(0);" id="go-to-assessment" class="mt-6 bg-blue-500 text-white font-semibold px-6 py-2 rounded-full hover:bg-blue-600 transition-colors">进入展馆</a>
+                            </div>
+                            <div class="hall-card bg-gray-50 rounded-2xl p-8 flex flex-col items-center text-center border border-gray-200">
+                                <div class="bg-green-100 p-4 rounded-full mb-4"><i data-lucide="book-open" class="w-8 h-8 text-green-500"></i></div>
+                                <h3 class="text-xl font-bold mb-2">科学照护知识科普馆</h3>
+                                <p class="text-gray-600 flex-grow">权威、全面的育儿知识库，涵盖生活、心理、安全、教育四大核心领域。</p>
+                                <a href="javascript:void(0);" id="go-to-knowledge" class="mt-6 bg-green-500 text-white font-semibold px-6 py-2 rounded-full hover:bg-green-600 transition-colors">进入展馆</a>
+                            </div>
+                            <div class="hall-card bg-gray-50 rounded-2xl p-8 flex flex-col items-center text-center border border-gray-200">
+                                <div class="bg-yellow-100 p-4 rounded-full mb-4"><i data-lucide="gamepad-2" class="w-8 h-8 text-yellow-500"></i></div>
+                                <h3 class="text-xl font-bold mb-2">虚拟照护情境体验馆</h3>
+                                <p class="text-gray-600 flex-grow">在游戏化场景中“演练”育儿技巧，轻松提升应对复杂情况的实战能力。</p>
+                                <a href="javascript:void(0);" id="go-to-experience" class="mt-6 bg-yellow-500 text-white font-semibold px-6 py-2 rounded-full hover:bg-yellow-600 transition-colors">进入展馆</a>
+                            </div>
+                            <div class="hall-card bg-gray-50 rounded-2xl p-8 flex flex-col items-center text-center border border-gray-200">
+                                <div class="bg-purple-100 p-4 rounded-full mb-4"><i data-lucide="heart-handshake" class="w-8 h-8 text-purple-500"></i></div>
+                                <h3 class="text-xl font-bold mb-2">专业支持与服务资源馆</h3>
+                                <p class="text-gray-600 flex-grow">在线咨询、资源导航、家长社区，在您需要时提供及时有效的支持。</p>
+                                <a href="javascript:void(0);" id="go-to-support" class="mt-6 bg-purple-500 text-white font-semibold px-6 py-2 rounded-full hover:bg-purple-600 transition-colors">进入展馆</a>
+                            </div>
+                            <div class="hall-card bg-gray-50 rounded-2xl p-8 flex flex-col items-center text-center border border-gray-200">
+                                <div class="bg-red-100 p-4 rounded-full mb-4"><i data-lucide="graduation-cap" class="w-8 h-8 text-red-500"></i></div>
+                                <h3 class="text-xl font-bold mb-2">家庭教育课程培训馆</h3>
+                                <p class="text-gray-600 flex-grow">系统化的在线课程与个性化干预方案，全面提升您的专业照护素养。</p>
+                                <a href="javascript:void(0);" id="go-to-training" class="mt-6 bg-red-500 text-white font-semibold px-6 py-2 rounded-full hover:bg-red-600 transition-colors">进入展馆</a>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+            <footer class="bg-gray-800 text-white"><div class="container mx-auto px-6 py-12 text-center text-sm text-gray-400">
+                <p>&copy; 2025 智护童行. All Rights Reserved. &nbsp;&nbsp;&middot;&nbsp;&nbsp; 
+                   <a href="javascript:void(0);" class="go-to-admin-login hover:text-white">管理员入口</a>
+                </p>
+            </div></footer>
+        </div>
+
+        <!-- ====================================================================== -->
+        <!-- Assessment Hall Page Section -->
+        <!-- ====================================================================== -->
+        <div id="assessment-page" class="page hidden">
+            <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
+                <div class="container mx-auto px-6 py-4 flex justify-between items-center"><a href="javascript:void(0);" class="go-home flex items-center space-x-2"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-teal-500"><path d="M17 14v-2a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v2"/><path d="M12 18c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"/><path d="M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2s10 4.477 10 10z"/><path d="m9.5 9.5 5 5"/><path d="m14.5 9.5-5 5"/></svg><span class="text-2xl font-bold text-gray-800">智护童行</span></a><nav class="hidden md:flex space-x-8"><a href="javascript:void(0);" class="go-home text-gray-600 hover:text-teal-600 transition-colors">返回首页</a><a href="javascript:void(0);" class="go-features text-gray-600 hover:text-teal-600 transition-colors">平台特色</a><a href="javascript:void(0);" class="go-community text-gray-600 hover:text-teal-600 transition-colors">家长社区</a></nav><div><button class="go-account bg-teal-500 text-white font-semibold px-5 py-2 rounded-full hover:bg-teal-600 transition-all shadow-sm">我的账户</button></div></div>
+            </header>
+            <main class="container mx-auto px-6 py-12 md:py-16">
+                <div class="text-center mb-12"><div class="inline-block bg-blue-100 p-4 rounded-full mb-4"><i data-lucide="clipboard-check" class="w-12 h-12 text-blue-500"></i></div><h1 class="text-4xl md:text-5xl font-bold">能力评估与成长记录馆</h1><p class="text-lg text-gray-600 mt-4 max-w-3xl mx-auto">通过专业的评估工具科学认识自己，用细致的记录见证孩子的每一步成长。</p></div>
+                <section id="assessments"><h2 class="text-2xl md:text-3xl font-bold mb-6 flex items-center"><i data-lucide="file-text" class="w-7 h-7 mr-3 text-teal-600"></i>开启一项新的评估</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="assessment-card bg-white rounded-xl p-6 flex flex-col"><h3 class="text-lg font-bold mb-2">儿童照护能力综合评估</h3><p class="text-gray-600 text-sm mb-4 flex-grow">全面评估您在生活、心理、安全、教育四大核心照护维度的综合能力水平。</p><a href="javascript:void(0);" data-assessment-type="comprehensive" class="start-assessment-btn mt-auto bg-emerald-500 hover:bg-emerald-600 text-white font-semibold px-5 py-2 rounded-lg text-center">开始评估</a></div>
+                        <div class="assessment-card bg-white rounded-xl p-6 flex flex-col"><h3 class="text-lg font-bold mb-2">长处和困难问卷 (SDQ)</h3><p class="text-gray-600 text-sm mb-4 flex-grow">关注孩子的情绪与行为表现，及时发现潜在的心理健康问题。</p><a href="javascript:void(0);" data-assessment-type="sdq" class="start-assessment-btn mt-auto bg-emerald-500 hover:bg-emerald-600 text-white font-semibold px-5 py-2 rounded-lg text-center">开始评估</a></div>
+                        <div class="assessment-card bg-white rounded-xl p-6 flex flex-col"><h3 class="text-lg font-bold mb-2">父母教育方式量表 (EMBU)</h3><p class="text-gray-600 text-sm mb-4 flex-grow">了解您自身的教养方式特点，如情感温暖、过度保护等。</p><a href="javascript:void(0);" data-assessment-type="embu" class="start-assessment-btn mt-auto bg-emerald-500 hover:bg-emerald-600 text-white font-semibold px-5 py-2 rounded-lg text-center">开始评估</a></div>
+                    </div>
+                </section>
+                <section id="records" class="mt-16"><h2 class="text-2xl md:text-3xl font-bold mb-6 flex items-center"><i data-lucide="history" class="w-7 h-7 mr-3 text-blue-600"></i>成长记录与历史报告</h2><div class="bg-white rounded-xl p-6 md:p-8 border border-gray-200"><div class="flex flex-col md:flex-row md:items-center justify-between gap-4"><div><h3 class="text-xl font-bold">我的成长档案</h3><p class="text-gray-600 mt-1">在这里查看您所有已完成的评估报告，并记录孩子的成长点滴。</p></div><a href="javascript:void(0);" id="go-to-archive" class="bg-blue-600 text-white font-bold px-6 py-3 rounded-lg text-center hover:bg-blue-700 transition-colors">进入我的档案</a></div></div></section>
+            </main>
+            <footer class="bg-gray-800 text-white mt-16"><div class="container mx-auto px-6 py-12 text-center text-sm text-gray-400">
+                <p>&copy; 2025 智护童行. All Rights Reserved. &nbsp;&nbsp;&middot;&nbsp;&nbsp; 
+                   <a href="javascript:void(0);" class="go-to-admin-login hover:text-white">管理员入口</a>
+                </p>
+            </div></footer>
+        </div>
+        
+        <!-- ====================================================================== -->
+        <!-- Knowledge Hall Page Section -->
+        <!-- ====================================================================== -->
+        <div id="knowledge-page" class="page hidden">
+            <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50"><div class="container mx-auto px-6 py-4 flex justify-between items-center"><a href="javascript:void(0);" class="go-home flex items-center space-x-2"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-teal-500"><path d="M17 14v-2a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v2"/><path d="M12 18c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"/><path d="M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2s10 4.477 10 10z"/><path d="m9.5 9.5 5 5"/><path d="m14.5 9.5-5 5"/></svg><span class="text-2xl font-bold text-gray-800">智护童行</span></a><nav class="hidden md:flex space-x-8"><a href="javascript:void(0);" class="go-home text-gray-600 hover:text-teal-600 transition-colors">返回首页</a><a href="javascript:void(0);" class="go-features text-gray-600 hover:text-teal-600 transition-colors">平台特色</a><a href="javascript:void(0);" class="go-community text-gray-600 hover:text-teal-600 transition-colors">家长社区</a></nav><div><button class="go-account bg-teal-500 text-white font-semibold px-5 py-2 rounded-full hover:bg-teal-600 transition-all shadow-sm">我的账户</button></div></div></header>
+            <main class="container mx-auto px-6 py-12 md:py-16">
+                 <div class="text-center mb-12"><div class="inline-block bg-green-100 p-4 rounded-full mb-4"><i data-lucide="book-open-check" class="w-12 h-12 text-green-500"></i></div><h1 class="text-4xl md:text-5xl font-bold">科学照护知识科普馆</h1><p class="text-lg text-gray-600 mt-4 max-w-3xl mx-auto">系统学习权威、专业的育儿知识，成为更懂孩子的家长。</p></div>
+                <div class="border-b border-gray-200 mb-8"><nav class="-mb-px flex space-x-6" aria-label="Tabs"><button data-tab="life" class="knowledge-tab-button active shrink-0 border-b-2 font-medium px-1 pb-4 text-sm text-gray-500 hover:border-gray-300 hover:text-gray-700">生活照护</button><button data-tab="psychology" class="knowledge-tab-button shrink-0 border-b-2 font-medium px-1 pb-4 text-sm text-gray-500 hover:border-gray-300 hover:text-gray-700">心理与情绪</button><button data-tab="safety" class="knowledge-tab-button shrink-0 border-b-2 font-medium px-1 pb-4 text-sm text-gray-500 hover:border-gray-300 hover:text-gray-700">安全照护</button><button data-tab="education" class="knowledge-tab-button shrink-0 border-b-2 font-medium px-1 pb-4 text-sm text-gray-500 hover:border-gray-300 hover:text-gray-700">教育照护</button></nav></div>
+                <div>
+                    <div id="knowledge-tab-content-life" class="knowledge-tab-content grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <div class="bg-white rounded-lg shadow-md overflow-hidden"><img src="https://picsum.photos/seed/food/600/400" alt="辅食添加样例图片" class="w-full h-48 object-cover"><div class="p-5"><h3 class="text-xl font-bold mb-2">婴幼儿辅食添加全攻略</h3><p class="text-gray-600 text-sm mb-4">从米粉到肉泥，一篇文章教会你如何为宝宝科学添加辅食。</p><a href="javascript:void(0);" data-article-id="food" class="read-article-btn font-semibold text-teal-600 hover:text-teal-700">阅读全文 &rarr;</a></div></div>
+                        <div class="bg-white rounded-lg shadow-md overflow-hidden"><img src="https://picsum.photos/seed/sleep/600/400" alt="睡眠训练样例图片" class="w-full h-48 object-cover"><div class="p-5"><h3 class="text-xl font-bold mb-2">告别夜醒：温柔的睡眠训练法</h3><p class="text-gray-600 text-sm mb-4">无需哭声免疫，用科学方法引导宝宝建立健康的睡眠习惯。</p><a href="javascript:void(0);" data-article-id="sleep" class="read-article-btn font-semibold text-teal-600 hover:text-teal-700">阅读全文 &rarr;</a></div></div>
+                    </div>
+                    <div id="knowledge-tab-content-psychology" class="knowledge-tab-content hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <div class="bg-white rounded-lg shadow-md overflow-hidden"><img src="https://picsum.photos/seed/emotion/600/400" alt="情绪管理样例图片" class="w-full h-48 object-cover"><div class="p-5"><h3 class="text-xl font-bold mb-2">读懂孩子的“情绪风暴”</h3><p class="text-gray-600 text-sm mb-4">当孩子大发脾气时，我们该怎么办？学习共情倾听，帮助孩子认识和管理自己的情绪。</p><a href="javascript:void(0);" data-article-id="emotion" class="read-article-btn font-semibold text-teal-600 hover:text-teal-700">阅读全文 &rarr;</a></div></div>
+                    </div>
+                    <div id="knowledge-tab-content-safety" class="knowledge-tab-content hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <div class="bg-white rounded-lg shadow-md overflow-hidden"><img src="https://picsum.photos/seed/safety/600/400" alt="居家安全样例图片" class="w-full h-48 object-cover"><div class="p-5"><h3 class="text-xl font-bold mb-2">家庭安全隐患排查清单</h3><p class="text-gray-600 text-sm mb-4">插座、窗户、药品……这份超全清单，帮助你消除家中每一个潜在的安全风险。</p><a href="javascript:void(0);" data-article-id="safety" class="read-article-btn font-semibold text-teal-600 hover:text-teal-700">阅读全文 &rarr;</a></div></div>
+                    </div>
+                    <div id="knowledge-tab-content-education" class="knowledge-tab-content hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <div class="bg-white rounded-lg shadow-md overflow-hidden"><img src="https://picsum.photos/seed/reading/600/400" alt="阅读习惯样例图片" class="w-full h-48 object-cover"><div class="p-5"><h3 class="text-xl font-bold mb-2">如何培养孩子的阅读习惯？</h3><p class="text-gray-600 text-sm mb-4">从亲子共读开始，选择合适的绘本，让孩子爱上阅读，受益一生。</p><a href="javascript:void(0);" data-article-id="reading" class="read-article-btn font-semibold text-teal-600 hover:text-teal-700">阅读全文 &rarr;</a></div></div>
+                    </div>
+                </div>
+            </main>
+            <footer class="bg-gray-800 text-white mt-16"><div class="container mx-auto px-6 py-12 text-center text-sm text-gray-400">
+                <p>&copy; 2025 智护童行. All Rights Reserved. &nbsp;&nbsp;&middot;&nbsp;&nbsp; 
+                   <a href="javascript:void(0);" class="go-to-admin-login hover:text-white">管理员入口</a>
+                </p>
+            </div></footer>
+        </div>
+
+        <!-- ====================================================================== -->
+        <!-- Experience Hall Page Section -->
+        <!-- ====================================================================== -->
+        <div id="experience-page" class="page hidden">
+            <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50"><div class="container mx-auto px-6 py-4 flex justify-between items-center"><a href="javascript:void(0);" class="go-home flex items-center space-x-2"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-teal-500"><path d="M17 14v-2a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v2"/><path d="M12 18c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"/><path d="M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2s10 4.477 10 10z"/><path d="m9.5 9.5 5 5"/><path d="m14.5 9.5-5 5"/></svg><span class="text-2xl font-bold text-gray-800">智护童行</span></a><nav class="hidden md:flex space-x-8"><a href="javascript:void(0);" class="go-home text-gray-600 hover:text-teal-600 transition-colors">返回首页</a><a href="javascript:void(0);" class="go-features text-gray-600 hover:text-teal-600 transition-colors">平台特色</a><a href="javascript:void(0);" class="go-community text-gray-600 hover:text-teal-600 transition-colors">家长社区</a></nav><div><button class="go-account bg-teal-500 text-white font-semibold px-5 py-2 rounded-full hover:bg-teal-600 transition-all shadow-sm">我的账户</button></div></div></header>
+            <main class="container mx-auto px-6 py-12 md:py-16">
+                 <div class="text-center mb-12"><div class="inline-block bg-yellow-100 p-4 rounded-full mb-4"><i data-lucide="gamepad-2" class="w-12 h-12 text-yellow-500"></i></div><h1 class="text-4xl md:text-5xl font-bold">虚拟照护情境体验馆</h1><p class="text-lg text-gray-600 mt-4 max-w-3xl mx-auto">在安全、有趣的虚拟环境中实践和演练，轻松掌握科学育儿新技能。</p></div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
+                    <div class="game-card bg-white rounded-xl shadow-lg overflow-hidden flex flex-col md:flex-row"><img src="https://picsum.photos/seed/task/600/600" alt="日常生活挑战样例图片" class="w-full md:w-5/12 h-64 md:h-auto object-cover"><div class="p-6 flex flex-col justify-between"><div><h3 class="text-2xl font-bold mb-2">小小照护大任务</h3><p class="text-gray-600 mb-4">模拟喂养、哄睡、更换尿布等日常照护挑战，在实践中学习高效的解决方法。</p></div><a href="javascript:void(0);" id="go-to-game-task" class="mt-4 inline-block bg-yellow-500 text-white font-bold px-6 py-3 rounded-lg text-center hover:bg-yellow-600 transition-colors">开始体验</a></div></div>
+                    <div class="game-card bg-white rounded-xl shadow-lg overflow-hidden flex flex-col md:flex-row"><img src="https://picsum.photos/seed/adventure/600/600" alt="情绪管理样例图片" class="w-full md:w-5/12 h-64 md:h-auto object-cover"><div class="p-6 flex flex-col justify-between"><div><h3 class="text-2xl font-bold mb-2">情绪大冒险</h3><p class="text-gray-600 mb-4">面对孩子的各种“情绪风暴”，学习如何共情倾听、有效沟通，引导孩子管理情绪。</p></div><a href="javascript:void(0);" id="go-to-game-emotion" class="mt-4 inline-block bg-yellow-500 text-white font-bold px-6 py-3 rounded-lg text-center hover:bg-yellow-600 transition-colors">开始体验</a></div></div>
+                    <div class="game-card bg-white rounded-xl shadow-lg overflow-hidden flex flex-col md:flex-row"><img src="https://picsum.photos/seed/hero/600/600" alt="安全预防样例图片" class="w-full md:w-5/12 h-64 md:h-auto object-cover"><div class="p-6 flex flex-col justify-between"><div><h3 class="text-2xl font-bold mb-2">保护小英雄</h3><p class="text-gray-600 mb-4">在模拟的家庭和户外场景中，识别并排除各种安全隐患，提升你的安全防范意识。</p></div><a href="javascript:void(0);" id="go-to-game-hero" class="mt-4 inline-block bg-yellow-500 text-white font-bold px-6 py-3 rounded-lg text-center hover:bg-yellow-600 transition-colors">开始体验</a></div></div>
+                    <div class="game-card bg-white rounded-xl shadow-lg overflow-hidden flex flex-col md:flex-row"><img src="https://picsum.photos/seed/example/600/600" alt="榜样教育样例图片" class="w-full md:w-5/12 h-64 md:h-auto object-cover"><div class="p-6 flex flex-col justify-between"><div><h3 class="text-2xl font-bold mb-2">榜样的力量</h3><p class="text-gray-600 mb-4">通过角色扮演，体验不同的教育方式带来的不同结果，理解言传身教的重要性。</p></div><a href="javascript:void(0);" id="go-to-game-example" class="mt-4 inline-block bg-yellow-500 text-white font-bold px-6 py-3 rounded-lg text-center hover:bg-yellow-600 transition-colors">开始体验</a></div></div>
+                </div>
+            </main>
+            <footer class="bg-gray-800 text-white mt-16"><div class="container mx-auto px-6 py-12 text-center text-sm text-gray-400">
+                <p>&copy; 2025 智护童行. All Rights Reserved. &nbsp;&nbsp;&middot;&nbsp;&nbsp; 
+                   <a href="javascript:void(0);" class="go-to-admin-login hover:text-white">管理员入口</a>
+                </p>
+            </div></footer>
+        </div>
+
+        <!-- ====================================================================== -->
+        <!-- Assessment Detail Pages -->
+        <!-- ====================================================================== -->
+        <div id="assessment-detail-comprehensive" class="page hidden"><main class="container mx-auto px-6 py-12 md:py-16"><div class="max-w-4xl mx-auto"><div class="text-center mb-8"><h1 class="text-3xl md:text-4xl font-bold">儿童照护能力综合评估</h1><p class="text-md text-gray-600 mt-2">本评估旨在全面了解您在各项照护工作中的情况。</p></div><div class="w-full progress-bar-bg rounded-full h-2.5 mb-8"><div class="progress-bar-fill h-2.5 rounded-full" style="width: 25%"></div></div><div class="bg-white p-8 rounded-xl shadow-lg border"><h3 class="text-xl font-semibold mb-6">问题 1/4: 当孩子挑食、不肯好好吃饭时，我通常会？</h3><div class="space-y-4"><label class="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50"><input type="radio" name="q1" class="h-5 w-5 text-emerald-600 border-gray-300 focus:ring-emerald-500"><span class="ml-4 text-gray-700">耐心引导，并尝试用更有趣的方式呈现食物。</span></label><label class="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50"><input type="radio" name="q1" class="h-5 w-5 text-emerald-600 border-gray-300 focus:ring-emerald-500"><span class="ml-4 text-gray-700">顺其自然，饿了总会吃的。</span></label><label class="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50"><input type="radio" name="q1" class="h-5 w-5 text-emerald-600 border-gray-300 focus:ring-emerald-500"><span class="ml-4 text-gray-700">有些生气，并强制要求孩子必须吃完。</span></label></div></div><div class="flex justify-between mt-8"><button class="go-to-assessment-hall font-semibold text-gray-600 hover:text-gray-800">返回展馆</button><button class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-8 py-3 rounded-lg">下一题</button></div></div></main></div>
+        <div id="assessment-detail-sdq" class="page hidden"><main class="container mx-auto px-6 py-12 md:py-16"><div class="max-w-4xl mx-auto"><div class="text-center mb-8"><h1 class="text-3xl md:text-4xl font-bold">长处和困难问卷 (SDQ)</h1><p class="text-md text-gray-600 mt-2">请根据您孩子最近六个月的情况进行回答。</p></div><div class="w-full progress-bar-bg rounded-full h-2.5 mb-8"><div class="progress-bar-fill h-2.5 rounded-full" style="width: 20%"></div></div><div class="bg-white p-8 rounded-xl shadow-lg border"><h3 class="text-xl font-semibold mb-6">问题 1/5: 我的孩子是否体贴他人感受？</h3><div class="space-y-4"><label class="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50"><input type="radio" name="sdq1" class="h-5 w-5 text-emerald-600 border-gray-300 focus:ring-emerald-500"><span class="ml-4 text-gray-700">不符合</span></label><label class="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50"><input type="radio" name="sdq1" class="h-5 w-5 text-emerald-600 border-gray-300 focus:ring-emerald-500"><span class="ml-4 text-gray-700">有点符合</span></label><label class="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50"><input type="radio" name="sdq1" class="h-5 w-5 text-emerald-600 border-gray-300 focus:ring-emerald-500"><span class="ml-4 text-gray-700">完全符合</span></label></div></div><div class="flex justify-between mt-8"><button class="go-to-assessment-hall font-semibold text-gray-600 hover:text-gray-800">返回展馆</button><button class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-8 py-3 rounded-lg">下一题</button></div></div></main></div>
+        <div id="assessment-detail-embu" class="page hidden"><main class="container mx-auto px-6 py-12 md:py-16"><div class="max-w-4xl mx-auto"><div class="text-center mb-8"><h1 class="text-3xl md:text-4xl font-bold">父母教育方式量表 (EMBU)</h1><p class="text-md text-gray-600 mt-2">本评估旨在帮助您了解自身的教养方式特点。</p></div><div class="w-full progress-bar-bg rounded-full h-2.5 mb-8"><div class="progress-bar-fill h-2.5 rounded-full" style="width: 33%"></div></div><div class="bg-white p-8 rounded-xl shadow-lg border"><h3 class="text-xl font-semibold mb-6">问题 1/3: 在孩子犯错后，我倾向于？</h3><div class="space-y-4"><label class="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50"><input type="radio" name="embu1" class="h-5 w-5 text-emerald-600 border-gray-300 focus:ring-emerald-500"><span class="ml-4 text-gray-700">严厉地批评，并告知其后果。</span></label><label class="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50"><input type="radio" name="embu1" class="h-5 w-5 text-emerald-600 border-gray-300 focus:ring-emerald-500"><span class="ml-4 text-gray-700">与孩子一起讨论为什么会犯错，并引导他思考如何改正。</span></label><label class="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50"><input type="radio" name="embu1" class="h-5 w-5 text-emerald-600 border-gray-300 focus:ring-emerald-500"><span class="ml-4 text-gray-700">暂时不作声，让他自己“冷静”一下。</span></label></div></div><div class="flex justify-between mt-8"><button class="go-to-assessment-hall font-semibold text-gray-600 hover:text-gray-800">返回展馆</button><button class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-8 py-3 rounded-lg">下一题</button></div></div></main></div>
+
+        <!-- ====================================================================== -->
+        <!-- Growth Archive Page -->
+        <!-- ====================================================================== -->
+        <div id="growth-archive-page" class="page hidden">
+            <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
+                <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+                    <a href="javascript:void(0);" class="go-home flex items-center space-x-2"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-teal-500"><path d="M17 14v-2a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v2"/><path d="M12 18c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"/><path d="M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2s10 4.477 10 10z"/><path d="m9.5 9.5 5 5"/><path d="m14.5 9.5-5 5"/></svg><span class="text-2xl font-bold text-gray-800">智护童行</span></a>
+                    <nav class="hidden md:flex space-x-8"><a href="javascript:void(0);" class="go-to-assessment-hall text-gray-600 hover:text-teal-600 transition-colors">返回评估馆</a><a href="javascript:void(0);" class="go-features text-gray-600 hover:text-teal-600 transition-colors">平台特色</a><a href="javascript:void(0);" class="go-community text-gray-600 hover:text-teal-600 transition-colors">家长社区</a></nav>
+                    <div><button class="go-account bg-teal-500 text-white font-semibold px-5 py-2 rounded-full hover:bg-teal-600 transition-all shadow-sm">我的账户</button></div>
+                </div>
+            </header>
+            <main class="container mx-auto px-6 py-12 md:py-16">
+                <div class="text-center mb-12"><div class="inline-block bg-blue-100 p-4 rounded-full mb-4"><i data-lucide="archive" class="w-12 h-12 text-blue-500"></i></div><h1 class="text-4xl md:text-5xl font-bold">我的成长档案</h1><p class="text-lg text-gray-600 mt-4 max-w-3xl mx-auto">汇集所有评估报告与成长点滴，见证每一次进步。</p></div>
+                <div class="bg-white p-6 rounded-2xl shadow-lg border flex items-center space-x-6 mb-10">
+                    <img src="https://picsum.photos/seed/avatar1/100/100" class="w-24 h-24 rounded-full border-4 border-white shadow-md" alt="孩子头像">
+                    <div>
+                        <h2 class="text-2xl font-bold">宝宝：小太阳</h2>
+                        <p class="text-gray-500">年龄：5岁3个月</p>
+                        <p class="text-gray-500 mt-1">最新动态：于 2025-06-15 完成了“儿童照护能力综合评估”。</p>
+                    </div>
+                </div>
+                <div class="border-b border-gray-200 mb-8">
+                    <nav class="-mb-px flex space-x-6" aria-label="Tabs">
+                        <button data-tab="reports" class="archive-tab-button active shrink-0 border-b-2 font-medium px-1 pb-4 text-sm text-gray-500 hover:border-gray-300 hover:text-gray-700">评估报告</button>
+                        <button data-tab="moments" class="archive-tab-button shrink-0 border-b-2 font-medium px-1 pb-4 text-sm text-gray-500 hover:border-gray-300 hover:text-gray-700">成长点滴</button>
+                    </nav>
+                </div>
+                <div>
+                    <div id="archive-tab-content-reports" class="archive-tab-content">
+                        <div class="overflow-x-auto bg-white rounded-xl p-4 shadow-md border">
+                            <table class="w-full text-left">
+                                <thead><tr class="border-b bg-gray-50"><th class="p-4 font-semibold">评估名称</th><th class="p-4 font-semibold hidden md:table-cell">完成日期</th><th class="p-4 font-semibold text-center">状态</th><th class="p-4 font-semibold text-right">操作</th></tr></thead>
+                                <tbody>
+                                    <tr class="border-b hover:bg-gray-50"><td class="p-4">儿童照护能力综合评估</td><td class="p-4 hidden md:table-cell">2025-06-15</td><td class="p-4 text-center"><span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">已完成</span></td><td class="p-4 text-right"><a href="#" class="font-medium text-blue-600 hover:underline">查看报告</a></td></tr>
+                                    <tr class="border-b hover:bg-gray-50"><td class="p-4">父母教育方式量表 (EMBU)</td><td class="p-4 hidden md:table-cell">2025-05-20</td><td class="p-4 text-center"><span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">已完成</span></td><td class="p-4 text-right"><a href="#" class="font-medium text-blue-600 hover:underline">查看报告</a></td></tr>
+                                    <tr class="hover:bg-gray-50"><td class="p-4">长处和困难问卷 (SDQ)</td><td class="p-4 hidden md:table-cell">2025-04-10</td><td class="p-4 text-center"><span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">已完成</span></td><td class="p-4 text-right"><a href="#" class="font-medium text-blue-600 hover:underline">查看报告</a></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div id="archive-tab-content-moments" class="archive-tab-content hidden">
+                        <div class="text-right mb-6">
+                            <button id="record-moment-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg inline-flex items-center"><i data-lucide="plus" class="w-5 h-5 mr-2"></i>记录新点滴</button>
+                        </div>
+                        <div class="relative border-l-2 border-blue-200 ml-3">
+                            <div class="mb-10 ml-6">
+                                <span class="absolute flex items-center justify-center w-6 h-6 bg-blue-100 rounded-full -left-3 ring-8 ring-white"><i data-lucide="award" class="w-4 h-4 text-blue-600"></i></span>
+                                <div class="bg-white p-4 rounded-lg border shadow-sm">
+                                    <div class="flex items-center justify-between mb-2"><h3 class="font-semibold text-lg">第一次自己穿好衣服</h3><time class="text-sm font-normal text-gray-400">2025年6月20日</time></div>
+                                    <p class="text-base font-normal text-gray-600">今天早上，小太阳自己把T恤和裤子都穿好了，虽然裤子穿反了，但还是一个巨大的进步！特别骄傲！</p>
+                                </div>
+                            </div>
+                            <div class="mb-10 ml-6">
+                                <span class="absolute flex items-center justify-center w-6 h-6 bg-blue-100 rounded-full -left-3 ring-8 ring-white"><i data-lucide="pen-tool" class="w-4 h-4 text-blue-600"></i></span>
+                                <div class="bg-white p-4 rounded-lg border shadow-sm">
+                                    <div class="flex items-center justify-between mb-2"><h3 class="font-semibold text-lg">画出了一家人</h3><time class="text-sm font-normal text-gray-400">2025年6月1日</time></div>
+                                    <p class="text-base font-normal text-gray-600">儿童节的礼物，画了一张画，上面有爸爸、妈妈和他自己，手牵着手。太暖心了。</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+            <footer class="bg-gray-800 text-white mt-16"><div class="container mx-auto px-6 py-12 text-center text-sm text-gray-400">
+                <p>&copy; 2025 智护童行. All Rights Reserved. &nbsp;&nbsp;&middot;&nbsp;&nbsp; 
+                   <a href="javascript:void(0);" class="go-to-admin-login hover:text-white">管理员入口</a>
+                </p>
+            </div></footer>
+        </div>
+        
+        <!-- ====================================================================== -->
+        <!-- Support Hall Page Section -->
+        <!-- ====================================================================== -->
+        <div id="support-page" class="page hidden">
+            <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50"><div class="container mx-auto px-6 py-4 flex justify-between items-center"><a href="javascript:void(0);" class="go-home flex items-center space-x-2"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-teal-500"><path d="M17 14v-2a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v2"/><path d="M12 18c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"/><path d="M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2s10 4.477 10 10z"/><path d="m9.5 9.5 5 5"/><path d="m14.5 9.5-5 5"/></svg><span class="text-2xl font-bold text-gray-800">智护童行</span></a><nav class="hidden md:flex space-x-8"><a href="javascript:void(0);" class="go-home text-gray-600 hover:text-teal-600 transition-colors">返回首页</a><a href="javascript:void(0);" class="go-features text-gray-600 hover:text-teal-600 transition-colors">平台特色</a><a href="javascript:void(0);" class="go-community text-gray-600 hover:text-teal-600 transition-colors">家长社区</a></nav><div><button class="go-account bg-teal-500 text-white font-semibold px-5 py-2 rounded-full hover:bg-teal-600 transition-all shadow-sm">我的账户</button></div></div></header>
+            <main class="container mx-auto px-6 py-12 md:py-16">
+                <div class="text-center mb-12">
+                    <div class="inline-block bg-purple-100 p-4 rounded-full mb-4"><i data-lucide="heart-handshake" class="w-12 h-12 text-purple-500"></i></div>
+                    <h1 class="text-4xl md:text-5xl font-bold">专业支持与服务资源馆</h1>
+                    <p class="text-lg text-gray-600 mt-4 max-w-3xl mx-auto">当您需要帮助时，我们都在。这里汇集了智能咨询、互助社区与权威资源。</p>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="space-y-8">
+                        <div class="bg-white p-8 rounded-2xl shadow-lg border border-gray-200 text-center">
+                             <i data-lucide="bot" class="w-16 h-16 mx-auto text-purple-500 mb-4"></i>
+                            <h3 class="text-2xl font-bold">智能在线咨询</h3>
+                            <p class="text-gray-600 mt-2 mb-6">基于“智谱清言”大模型，7x24小时随时解答您的育儿困惑。</p>
+                            <a href="javascript:void(0);" class="bg-purple-600 text-white font-bold px-8 py-3 rounded-lg hover:bg-purple-700 transition-colors">开始咨询</a>
+                        </div>
+                        <div class="bg-white p-8 rounded-2xl shadow-lg border border-gray-200 text-center">
+                             <i data-lucide="contact" class="w-16 h-16 mx-auto text-purple-500 mb-4"></i>
+                            <h3 class="text-2xl font-bold">服务对接</h3>
+                            <p class="text-gray-600 mt-2 mb-6">需要更深入的帮助？请关注我们的官方渠道，与我们取得联系。</p>
+                            <div class="flex justify-center space-x-4">
+                                <span class="font-semibold">微信公众号: 育见未来ing</span>
+                                <span class="font-semibold">微信号: zhihutongxing</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-8 rounded-2xl shadow-lg border border-gray-200 flex flex-col">
+                        <h3 class="text-2xl font-bold mb-4 flex items-center"><i data-lucide="compass" class="w-7 h-7 mr-3 text-purple-500"></i>权威资源导航</h3>
+                        <div class="flex-grow space-y-4">
+                            <a href="http://www.cycrc.org.cn/zzjg/jtjyyjs/" target="_blank" class="block p-4 rounded-lg bg-gray-50 hover:bg-purple-50 hover:shadow-sm transition-all"><strong>家庭教育研究所</strong> - 中国青少年研究网</a>
+                            <a href="https://www.ccc.org.cn/col/col266/index.html" target="_blank" class="block p-4 rounded-lg bg-gray-50 hover:bg-purple-50 hover:shadow-sm transition-all"><strong>家庭教育研究指导中心</strong> - 中国儿童中心</a>
+                            <a href="https://www.zgjjxh.org.cn/" target="_blank" class="block p-4 rounded-lg bg-gray-50 hover:bg-purple-50 hover:shadow-sm transition-all"><strong>中国家庭教育学会</strong> - 官方网站</a>
+                            <a href="https://www.cydf.org.cn/" target="_blank" class="block p-4 rounded-lg bg-gray-50 hover:bg-purple-50 hover:shadow-sm transition-all"><strong>中国青少年发展基金会</strong> - 官方网站</a>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-4 mt-8 flex items-center"><i data-lucide="users" class="w-7 h-7 mr-3 text-purple-500"></i>家长互助社区</h3>
+                        <p class="text-gray-600 mb-6">分享您的育儿经验和情感困惑，在温暖的社区中与其他家长共同成长，获得专家和同伴的支持。</p>
+                        <a href="javascript:void(0);" class="go-community mt-auto bg-purple-600 text-white font-bold px-8 py-3 rounded-lg hover:bg-purple-700 transition-colors text-center">进入社区</a>
+                    </div>
+                </div>
+            </main>
+            <footer class="bg-gray-800 text-white mt-16"><div class="container mx-auto px-6 py-12 text-center text-sm text-gray-400">
+                <p>&copy; 2025 智护童行. All Rights Reserved. &nbsp;&nbsp;&middot;&nbsp;&nbsp; 
+                   <a href="javascript:void(0);" class="go-to-admin-login hover:text-white">管理员入口</a>
+                </p>
+            </div></footer>
+        </div>
+
+        <!-- ====================================================================== -->
+        <!-- Training Hall Page Section -->
+        <!-- ====================================================================== -->
+        <div id="training-page" class="page hidden">
+            <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50"><div class="container mx-auto px-6 py-4 flex justify-between items-center"><a href="javascript:void(0);" class="go-home flex items-center space-x-2"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-teal-500"><path d="M17 14v-2a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v2"/><path d="M12 18c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"/><path d="M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2s10 4.477 10 10z"/><path d="m9.5 9.5 5 5"/><path d="m14.5 9.5-5 5"/></svg><span class="text-2xl font-bold text-gray-800">智护童行</span></a><nav class="hidden md:flex space-x-8"><a href="javascript:void(0);" class="go-home text-gray-600 hover:text-teal-600 transition-colors">返回首页</a><a href="javascript:void(0);" class="go-features text-gray-600 hover:text-teal-600 transition-colors">平台特色</a><a href="javascript:void(0);" class="go-community text-gray-600 hover:text-teal-600 transition-colors">家长社区</a></nav><div><button class="go-account bg-teal-500 text-white font-semibold px-5 py-2 rounded-full hover:bg-teal-600 transition-all shadow-sm">我的账户</button></div></div></header>
+            <main class="container mx-auto px-6 py-12 md:py-16">
+                <div class="text-center mb-12">
+                    <div class="inline-block bg-red-100 p-4 rounded-full mb-4"><i data-lucide="graduation-cap" class="w-12 h-12 text-red-500"></i></div>
+                    <h1 class="text-4xl md:text-5xl font-bold">家庭教育课程培训馆</h1>
+                    <p class="text-lg text-gray-600 mt-4 max-w-3xl mx-auto">系统化提升您的专业素养，用科学方法有效陪伴孩子成长。</p>
+                </div>
+                <div class="bg-white rounded-2xl shadow-lg border p-8 grid md:grid-cols-2 gap-8 items-center mb-12">
+                    <div>
+                        <h2 class="text-3xl font-bold text-red-600">本月主推：积极养育法</h2>
+                        <p class="text-gray-600 mt-4">这门课程将教您如何用既不惩罚也不骄纵的方式管教孩子，培养出自律、有责任感和解决问题能力的孩子。</p>
+                        <a href="javascript:void(0);" id="go-to-course-detail" class="mt-6 inline-block bg-red-500 text-white font-bold px-8 py-3 rounded-lg hover:bg-red-600 transition-colors">立即学习</a>
+                    </div>
+                    <img src="https://picsum.photos/seed/course/600/400" alt="课程封面" class="rounded-lg shadow-md w-full h-auto">
+                </div>
+                <div class="grid lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-2">
+                        <h3 class="text-2xl font-bold mb-6">所有课程</h3>
+                        <div class="space-y-6">
+                            <div class="bg-white p-6 rounded-xl border flex items-start space-x-6 hover:shadow-md transition-shadow">
+                                <div class="bg-red-50 p-3 rounded-lg"><i data-lucide="smile" class="w-8 h-8 text-red-500"></i></div>
+                                <div>
+                                    <h4 class="font-bold text-lg">孩子的情绪与行为管理</h4>
+                                    <p class="text-sm text-gray-500">帮助您理解孩子的情感需求，掌握有效的行为管理技巧。</p>
+                                    <a href="javascript:void(0);" class="text-sm font-semibold text-red-600 mt-2 inline-block">查看详情 &rarr;</a>
+                                </div>
+                            </div>
+                            <div class="bg-white p-6 rounded-xl border flex items-start space-x-6 hover:shadow-md transition-shadow">
+                                <div class="bg-red-50 p-3 rounded-lg"><i data-lucide="puzzle" class="w-8 h-8 text-red-500"></i></div>
+                                <div>
+                                    <h4 class="font-bold text-lg">个性化照护方案设计</h4>
+                                    <p class="text-sm text-gray-500">学习如何根据孩子的特点，设计个性化的干预方案，促进身心健康。</p>
+                                    <a href="javascript:void(0);" class="text-sm font-semibold text-red-600 mt-2 inline-block">查看详情 &rarr;</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="space-y-8">
+                         <div>
+                            <h3 class="text-2xl font-bold mb-6">实用工具</h3>
+                            <div class="bg-white p-6 rounded-xl border hover:shadow-md transition-shadow mb-6">
+                                <h4 class="font-bold text-lg flex items-center"><i data-lucide="bar-chart-2" class="w-5 h-5 mr-2 text-red-500"></i>情绪行为反馈分析</h4>
+                                <p class="text-sm text-gray-500 mt-2">上传您的情绪行为量表，或让AI分析您的互动模式，生成反馈报告。</p>
+                                <a href="javascript:void(0);" class="text-sm font-semibold text-red-600 mt-4 inline-block">开始分析</a>
+                            </div>
+                             <div class="bg-white p-6 rounded-xl border hover:shadow-md transition-shadow">
+                                <h4 class="font-bold text-lg flex items-center"><i data-lucide="gift" class="w-5 h-5 mr-2 text-red-500"></i>行为调整与奖励</h4>
+                                <p class="text-sm text-gray-500 mt-2">查看成功案例，获取可用于家庭的“行为大礼包”，激励孩子做出积极改变。</p>
+                                <a href="javascript:void(0);" class="text-sm font-semibold text-red-600 mt-4 inline-block">获取礼包</a>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold mb-6">课程反馈</h3>
+                            <div class="bg-white p-6 rounded-xl border">
+                                <p class="text-gray-600 italic">“这里的课程非常系统，比零散地看文章好多了。个性化方案也很有针对性！”</p>
+                                <p class="text-right font-semibold mt-4">- 一位学员</p>
+                                <a href="javascript:void(0);" class="text-sm font-semibold text-red-600 mt-4 inline-block">我也要评价</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+            <footer class="bg-gray-800 text-white mt-16"><div class="container mx-auto px-6 py-12 text-center text-sm text-gray-400">
+                <p>&copy; 2025 智护童行. All Rights Reserved. &nbsp;&nbsp;&middot;&nbsp;&nbsp; 
+                   <a href="javascript:void(0);" class="go-to-admin-login hover:text-white">管理员入口</a>
+                </p>
+            </div></footer>
+        </div>
+        
+        <!-- ====================================================================== -->
+        <!-- Course Detail Page -->
+        <!-- ====================================================================== -->
+        <div id="course-detail-page" class="page hidden">
+            <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50"><div class="container mx-auto px-6 py-4 flex justify-between items-center"><a href="javascript:void(0);" class="go-home flex items-center space-x-2"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-teal-500"><path d="M17 14v-2a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v2"/><path d="M12 18c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"/><path d="M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2s10 4.477 10 10z"/><path d="m9.5 9.5 5 5"/><path d="m14.5 9.5-5 5"/></svg><span class="text-2xl font-bold text-gray-800">智护童行</span></a><nav class="hidden md:flex space-x-8"><a href="javascript:void(0);" class="go-to-training-hall text-gray-600 hover:text-teal-600 transition-colors">返回课程馆</a></nav><div><button class="go-account bg-teal-500 text-white font-semibold px-5 py-2 rounded-full hover:bg-teal-600 transition-all shadow-sm">我的账户</button></div></div></header>
+            <main class="container mx-auto px-6 py-12 md:py-16">
+                <div class="grid lg:grid-cols-3 gap-8">
+                    <!-- Left Column: Video and Info -->
+                    <div class="lg:col-span-2">
+                        <!-- Video Player Placeholder -->
+                        <div class="aspect-video bg-black rounded-xl shadow-lg flex items-center justify-center mb-6">
+                            <i data-lucide="play-circle" class="w-20 h-20 text-white/50"></i>
+                        </div>
+                        <h1 class="text-3xl md:text-4xl font-bold mb-4">课程：积极养育法</h1>
+                        <!-- Info Tabs -->
+                        <div class="border-b border-gray-200 mb-6">
+                            <nav class="-mb-px flex space-x-6" aria-label="Tabs">
+                                <button data-tab="description" class="course-tab-button active shrink-0 border-b-2 font-medium px-1 pb-4 text-sm">课程介绍</button>
+                                <button data-tab="instructor" class="course-tab-button shrink-0 border-b-2 font-medium px-1 pb-4 text-sm text-gray-500 hover:border-gray-300">讲师信息</button>
+                                <button data-tab="notes" class="course-tab-button shrink-0 border-b-2 font-medium px-1 pb-4 text-sm text-gray-500 hover:border-gray-300">学员笔记</button>
+                            </nav>
+                        </div>
+                        <!-- Tab Content -->
+                        <div>
+                            <div id="course-tab-content-description" class="course-tab-content prose max-w-none">
+                                <p>本课程深入探讨“积极养育法”的核心理念，旨在帮助家长建立一个充满爱、尊重和鼓励的家庭环境。我们将学习如何理解孩子的行为动机，运用有效的沟通技巧，并通过非惩罚性的方式设定界限和解决问题。课程结合了大量的真实案例和可操作的工具，让您在学习后能够立即应用到家庭生活中，培养出自信、独立且富有合作精神的孩子。</p>
+                            </div>
+                            <div id="course-tab-content-instructor" class="course-tab-content hidden">
+                                <div class="flex items-center space-x-4">
+                                    <img class="h-16 w-16 rounded-full" src="https://picsum.photos/seed/teacher/100/100" alt="讲师头像">
+                                    <div>
+                                        <h4 class="text-lg font-bold">王教授</h4>
+                                        <p class="text-sm text-gray-600">资深家庭教育专家，儿童心理学博士</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="course-tab-content-notes" class="course-tab-content hidden">
+                                <p>在这里记录您的学习笔记...</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Right Column: Curriculum -->
+                    <div class="lg:col-span-1">
+                        <div class="bg-white p-6 rounded-2xl shadow-lg border">
+                            <h3 class="text-xl font-bold mb-4">课程目录</h3>
+                            <ul class="space-y-2">
+                                <li><a href="#" class="flex items-center p-3 rounded-lg bg-emerald-50 text-emerald-700 font-semibold"><i data-lucide="play" class="w-5 h-5 mr-3"></i> 第1章：什么是积极养育？</a></li>
+                                <li><a href="#" class="flex items-center p-3 rounded-lg hover:bg-gray-100"><i data-lucide="lock" class="w-5 h-5 mr-3 text-gray-400"></i> 第2章：理解孩子的错误行为</a></li>
+                                <li><a href="#" class="flex items-center p-3 rounded-lg hover:bg-gray-100"><i data-lucide="lock" class="w-5 h-5 mr-3 text-gray-400"></i> 第3章：鼓励与赞美的艺术</a></li>
+                                <li><a href="#" class="flex items-center p-3 rounded-lg hover:bg-gray-100"><i data-lucide="lock" class="w-5 h-5 mr-3 text-gray-400"></i> 第4章：家庭会议的力量</a></li>
+                                <li><a href="#" class="flex items-center p-3 rounded-lg hover:bg-gray-100"><i data-lucide="lock" class="w-5 h-5 mr-3 text-gray-400"></i> 第5章：温柔而坚定的界限</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </main>
+            <footer class="bg-gray-800 text-white mt-16"><div class="container mx-auto px-6 py-12 text-center text-sm text-gray-400">
+                <p>&copy; 2025 智护童行. All Rights Reserved. &nbsp;&nbsp;&middot;&nbsp;&nbsp; 
+                   <a href="javascript:void(0);" class="go-to-admin-login hover:text-white">管理员入口</a>
+                </p>
+            </div></footer>
+        </div>
+        
+        <!-- ====================================================================== -->
+        <!-- Features Page -->
+        <!-- ====================================================================== -->
+        <div id="features-page" class="page hidden">
+             <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
+                <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+                    <a href="javascript:void(0);" class="go-home flex items-center space-x-2"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-teal-500"><path d="M17 14v-2a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v2"/><path d="M12 18c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"/><path d="M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2s10 4.477 10 10z"/><path d="m9.5 9.5 5 5"/><path d="m14.5 9.5-5 5"/></svg><span class="text-2xl font-bold text-gray-800">智护童行</span></a>
+                    <nav class="hidden md:flex space-x-8"><a href="javascript:void(0);" class="go-home text-gray-600 hover:text-teal-600 transition-colors">返回首页</a><a href="javascript:void(0);" class="go-community text-gray-600 hover:text-teal-600 transition-colors">家长社区</a></nav>
+                    <div><button class="go-account bg-teal-500 text-white font-semibold px-5 py-2 rounded-full hover:bg-teal-600 transition-all shadow-sm">我的账户</button></div>
+                </div>
+            </header>
+            <main class="container mx-auto px-6 py-12 md:py-16">
+                <div class="text-center mb-16">
+                    <div class="inline-block bg-teal-100 p-4 rounded-full mb-4">
+                        <i data-lucide="sparkles" class="w-12 h-12 text-teal-500"></i>
+                    </div>
+                    <h1 class="text-4xl md:text-5xl font-bold">平台特色</h1>
+                    <p class="text-lg text-gray-600 mt-4 max-w-3xl mx-auto">我们如何通过创新技术，为您提供独一无二的家庭照护支持。</p>
+                </div>
+
+                <div class="max-w-4xl mx-auto space-y-20">
+                    <!-- Feature 1 -->
+                    <div class="grid md:grid-cols-2 gap-12 items-center">
+                        <div>
+                            <img src="https://picsum.photos/seed/ai/800/600" class="rounded-2xl shadow-xl w-full" alt="智能引导插图">
+                        </div>
+                        <div>
+                            <div class="inline-flex items-center bg-teal-100 text-teal-800 text-sm font-medium mb-4 px-3 py-1 rounded-full">
+                                <i data-lucide="lightbulb" class="w-4 h-4 mr-2"></i>
+                                智能引导
+                            </div>
+                            <h2 class="text-3xl font-bold mb-4">为您量身定制的成长路径</h2>
+                            <p class="text-gray-600 leading-relaxed">
+                                平台的核心是强大的智能引导系统。它不仅仅是信息的堆砌，更是您的私人育儿顾问。通过分析您的评估结果、学习进度和互动行为，我们的AI算法会为您推荐最合适的知识内容、课程和体验场景，形成一条为您和孩子量身定制的、动态调整的成长路径，让您的每一次学习都事半功倍。
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Feature 2 -->
+                    <div class="grid md:grid-cols-2 gap-12 items-center">
+                        <div class="md:order-2">
+                            <img src="https://picsum.photos/seed/vr/800/600" class="rounded-2xl shadow-xl w-full" alt="虚拟互动插图">
+                        </div>
+                        <div class="md:order-1">
+                            <div class="inline-flex items-center bg-yellow-100 text-yellow-800 text-sm font-medium mb-4 px-3 py-1 rounded-full">
+                                <i data-lucide="gamepad-2" class="w-4 h-4 mr-2"></i>
+                                虚拟互动
+                            </div>
+                            <h2 class="text-3xl font-bold mb-4">在“实战”中轻松学习</h2>
+                            <p class="text-gray-600 leading-relaxed">
+                                育儿知识不能只停留在理论。虚拟照护情境体验馆是我们的创新特色。在这里，您可以置身于各种逼真的家庭照护场景中，例如安抚哭闹的宝宝或处理二胎矛盾。通过安全、有趣、无压力的游戏化互动，您可以反复演练应对策略，将所学知识内化为实际技能，从容面对真实世界中的挑战。
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Feature 3 -->
+                    <div class="grid md:grid-cols-2 gap-12 items-center">
+                        <div>
+                            <img src="https://picsum.photos/seed/data/800/600" class="rounded-2xl shadow-xl w-full" alt="数据驱动插图">
+                        </div>
+                        <div>
+                             <div class="inline-flex items-center bg-blue-100 text-blue-800 text-sm font-medium mb-4 px-3 py-1 rounded-full">
+                                <i data-lucide="shield-check" class="w-4 h-4 mr-2"></i>
+                                评估与支持
+                            </div>
+                            <h2 class="text-3xl font-bold mb-4">精准评估，全面支持</h2>
+                            <p class="text-gray-600 leading-relaxed">
+                                我们提供了一整套专业的评估工具，帮助您清晰地认识自己在不同照护维度的长处与待提升领域。评估结果将生成动态的可视化报告，并自动融入您的成长档案。这不仅为您提供了成长的基线，也为平台的“精准支持”提供了依据。无论是AI的即时问答，还是权威的资源导航，亦或是温暖的家长社区，我们致力于为您提供一个全方位、多层次的支持网络。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </main>
+            <footer class="bg-gray-800 text-white mt-16"><div class="container mx-auto px-6 py-12 text-center text-sm text-gray-400">
+                <p>&copy; 2025 智护童行. All Rights Reserved. &nbsp;&nbsp;&middot;&nbsp;&nbsp; 
+                   <a href="javascript:void(0);" class="go-to-admin-login hover:text-white">管理员入口</a>
+                </p>
+            </div></footer>
+        </div>
+        
+        <!-- ====================================================================== -->
+        <!-- Community Page -->
+        <!-- ====================================================================== -->
+        <div id="community-page" class="page hidden">
+            <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
+                <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+                    <a href="javascript:void(0);" class="go-home flex items-center space-x-2"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-teal-500"><path d="M17 14v-2a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v2"/><path d="M12 18c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"/><path d="M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2s10 4.477 10 10z"/><path d="m9.5 9.5 5 5"/><path d="m14.5 9.5-5 5"/></svg><span class="text-2xl font-bold text-gray-800">智护童行</span></a>
+                    <nav class="hidden md:flex space-x-8"><a href="javascript:void(0);" class="go-home text-gray-600 hover:text-teal-600 transition-colors">返回首页</a><a href="javascript:void(0);" class="go-features text-gray-600 hover:text-teal-600 transition-colors">平台特色</a></nav>
+                    <div><button class="go-account bg-teal-500 text-white font-semibold px-5 py-2 rounded-full hover:bg-teal-600 transition-all shadow-sm">我的账户</button></div>
+                </div>
+            </header>
+            <main class="container mx-auto px-6 py-12 md:py-16">
+                 <div class="flex justify-between items-center mb-12">
+                     <div>
+                        <h1 class="text-4xl md:text-5xl font-bold">家长互助社区</h1>
+                        <p class="text-lg text-gray-600 mt-2">分享经验，彼此支持，在育儿路上我们并不孤单。</p>
+                    </div>
+                    <button id="create-post-btn" class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-6 rounded-lg inline-flex items-center">
+                        <i data-lucide="plus" class="w-5 h-5 mr-2"></i>
+                        <span>发表新帖</span>
+                    </button>
+                 </div>
+                 <div class="grid lg:grid-cols-3 gap-8">
+                    <!-- Main Feed -->
+                    <div id="community-feed" class="lg:col-span-2 space-y-6">
+                        <!-- Post Card 1 -->
+                        <div class="post-card bg-white p-6 rounded-2xl shadow-md border">
+                            <div class="flex items-center mb-4">
+                                <img src="https://picsum.photos/seed/user1/48/48" class="w-12 h-12 rounded-full mr-4" alt="用户头像">
+                                <div>
+                                    <h4 class="font-bold">焦虑的宝妈</h4>
+                                    <p class="text-xs text-gray-500">发布于 2小时前</p>
+                                </div>
+                            </div>
+                            <h3 class="text-xl font-bold mb-3">#求助# 宝宝快2岁了还不肯开口说话，怎么办？</h3>
+                            <p class="text-gray-700 mb-4">
+                                家里的老人总说“贵人语迟”，但我看邻居家同龄的孩子都会喊爸爸妈妈了，心里真的很着急。有没有什么好的引导方法？需要去医院检查吗？
+                            </p>
+                            <div class="flex justify-between items-center text-gray-500 pt-4 border-t">
+                                <div class="flex space-x-6">
+                                    <button class="like-btn flex items-center space-x-1 hover:text-red-500 transition-colors"><i data-lucide="heart" class="w-5 h-5"></i><span class="like-count">15</span></button>
+                                    <button class="comment-btn flex items-center space-x-1 hover:text-blue-500 transition-colors"><i data-lucide="message-square" class="w-5 h-5"></i><span class="comment-count">2</span></button>
+                                </div>
+                                <button class="flex items-center space-x-1 hover:text-green-500 transition-colors"><i data-lucide="share-2" class="w-5 h-5"></i><span>转发</span></button>
+                            </div>
+                             <!-- Comment Section (Hidden by default) -->
+                            <div class="comment-section hidden mt-6">
+                                <div class="comment-list space-y-4">
+                                    <!-- Comment -->
+                                    <div class="flex items-start space-x-3">
+                                        <img src="https://picsum.photos/seed/user2/32/32" class="w-8 h-8 rounded-full" alt="评论者头像">
+                                        <div class="flex-1 bg-gray-100 p-3 rounded-lg"><p class="text-sm"><strong class="font-semibold">超人爸爸：</strong>我家大宝也这样，后来多带他出去和小朋友玩，慢慢就好了。</p></div>
+                                    </div>
+                                    <!-- Comment -->
+                                    <div class="flex items-start space-x-3">
+                                        <img src="https://picsum.photos/seed/user3/32/32" class="w-8 h-8 rounded-full" alt="评论者头像">
+                                        <div class="flex-1 bg-gray-100 p-3 rounded-lg"><p class="text-sm"><strong class="font-semibold">阳光妈妈：</strong>可以先去医院做个评估，排除生理问题后就多和他说话、读绘本。</p></div>
+                                    </div>
+                                </div>
+                                <!-- New Comment Form -->
+                                <form class="new-comment-form mt-4 flex items-center space-x-3">
+                                    <img src="https://picsum.photos/seed/myavatar/32/32" class="w-8 h-8 rounded-full" alt="我的头像">
+                                    <input type="text" placeholder="发表您的评论..." class="comment-input w-full border-gray-300 rounded-full shadow-sm focus:border-cyan-500 focus:ring-cyan-500 text-sm px-4 py-2">
+                                    <button type="submit" class="bg-cyan-500 text-white font-semibold px-4 py-2 rounded-full hover:bg-cyan-600 text-sm">发送</button>
+                                </form>
+                            </div>
+                        </div>
+                        <!-- Post Card 2 -->
+                         <div class="post-card bg-white p-6 rounded-2xl shadow-md border">
+                            <div class="flex items-center mb-4">
+                                <img src="https://picsum.photos/seed/user2/48/48" class="w-12 h-12 rounded-full mr-4" alt="用户头像">
+                                <div>
+                                    <h4 class="font-bold">超人爸爸</h4>
+                                    <p class="text-xs text-gray-500">发布于 1天前</p>
+                                </div>
+                            </div>
+                            <h3 class="text-xl font-bold mb-3">#经验分享# 关于二胎家庭，如何做到“一碗水端平”</h3>
+                            <p class="text-gray-700 mb-4">
+                                大宝今年5岁，二宝刚1岁。最近明显感觉大宝有点小情绪，会吃弟弟的醋。我尝试了一些方法，比如每天保证有单独陪大宝的时间，让他参与到照顾弟弟的过程中来。效果还不错，分享给大家...
+                            </p>
+                            <div class="flex justify-between items-center text-gray-500 pt-4 border-t">
+                                <div class="flex space-x-6">
+                                    <button class="like-btn flex items-center space-x-1 hover:text-red-500 transition-colors"><i data-lucide="heart" class="w-5 h-5"></i><span class="like-count">32</span></button>
+                                    <button class="comment-btn flex items-center space-x-1 hover:text-blue-500 transition-colors"><i data-lucide="message-square" class="w-5 h-5"></i><span class="comment-count">0</span></button>
+                                </div>
+                                <button class="flex items-center space-x-1 hover:text-green-500 transition-colors"><i data-lucide="share-2" class="w-5 h-5"></i><span>转发</span></button>
+                            </div>
+                             <!-- Comment Section (Hidden by default) -->
+                            <div class="comment-section hidden mt-6">
+                                <div class="comment-list space-y-4"></div>
+                                <form class="new-comment-form mt-4 flex items-center space-x-3">
+                                    <img src="https://picsum.photos/seed/myavatar/32/32" class="w-8 h-8 rounded-full" alt="我的头像">
+                                    <input type="text" placeholder="发表您的评论..." class="comment-input w-full border-gray-300 rounded-full shadow-sm focus:border-cyan-500 focus:ring-cyan-500 text-sm px-4 py-2">
+                                    <button type="submit" class="bg-cyan-500 text-white font-semibold px-4 py-2 rounded-full hover:bg-cyan-600 text-sm">发送</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Sidebar -->
+                    <div class="lg:col-span-1 space-y-8">
+                        <div class="bg-white p-6 rounded-2xl shadow-md border">
+                            <h3 class="font-bold text-lg mb-4">热门话题</h3>
+                            <div class="space-y-2">
+                                <a href="#" class="block text-cyan-600 hover:underline">#辅食添加</a>
+                                <a href="#" class="block text-cyan-600 hover:underline">#入园焦虑</a>
+                                <a href="#" class="block text-cyan-600 hover:underline">#二胎关系</a>
+                                <a href="#" class="block text-cyan-600 hover:underline">#亲子阅读</a>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl shadow-md border">
+                            <h3 class="font-bold text-lg mb-4">活跃用户</h3>
+                            <div class="space-y-4">
+                                <div class="flex items-center"><img src="https://picsum.photos/seed/user2/40/40" class="w-10 h-10 rounded-full mr-3" alt="活跃用户1"><span class="font-semibold">超人爸爸</span></div>
+                                <div class="flex items-center"><img src="https://picsum.photos/seed/user3/40/40" class="w-10 h-10 rounded-full mr-3" alt="活跃用户2"><span class="font-semibold">阳光妈妈</span></div>
+                                <div class="flex items-center"><img src="https://picsum.photos/seed/user1/40/40" class="w-10 h-10 rounded-full mr-3" alt="活跃用户3"><span class="font-semibold">焦虑的宝妈</span></div>
+                            </div>
+                        </div>
+                    </div>
+                 </div>
+            </main>
+            <footer class="bg-gray-800 text-white mt-16"><div class="container mx-auto px-6 py-12 text-center text-sm text-gray-400">
+                <p>&copy; 2025 智护童行. All Rights Reserved. &nbsp;&nbsp;&middot;&nbsp;&nbsp; 
+                   <a href="javascript:void(0);" class="go-to-admin-login hover:text-white">管理员入口</a>
+                </p>
+            </div></footer>
+        </div>
+        
+        <!-- ====================================================================== -->
+        <!-- Admin Login Page -->
+        <!-- ====================================================================== -->
+        <div id="admin-login-page" class="page hidden bg-gray-100">
+            <div class="min-h-screen flex items-center justify-center">
+                <div class="max-w-md w-full bg-white p-8 rounded-2xl shadow-lg">
+                    <div class="text-center mb-8">
+                        <a href="javascript:void(0);" class="go-home flex items-center justify-center space-x-2">
+                           <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-teal-500"><path d="M17 14v-2a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v2"/><path d="M12 18c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"/><path d="M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2s10 4.477 10 10z"/><path d="m9.5 9.5 5 5"/><path d="m14.5 9.5-5 5"/></svg>
+                            <span class="text-2xl font-bold text-gray-800">智护童行</span>
+                        </a>
+                        <h2 class="mt-4 text-2xl font-bold text-gray-900">管理员登录</h2>
+                    </div>
+                    <form id="admin-login-form" class="space-y-6">
+                        <div>
+                            <label for="admin-email" class="block text-sm font-medium text-gray-700">邮箱地址</label>
+                            <div class="mt-1">
+                                <input id="admin-email" name="email" type="email" autocomplete="email" required class="w-full border border-gray-300 px-3 py-2 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500" value="admin@zhihutongxing.com">
+                            </div>
+                        </div>
+                        <div>
+                            <label for="admin-password" class="block text-sm font-medium text-gray-700">密码</label>
+                            <div class="mt-1">
+                                <input id="admin-password" name="password" type="password" autocomplete="current-password" required class="w-full border border-gray-300 px-3 py-2 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500" value="password">
+                            </div>
+                        </div>
+                        <div>
+                            <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">登 录</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ====================================================================== -->
+        <!-- Admin Dashboard Section -->
+        <!-- ====================================================================== -->
+        <div id="admin-dashboard" class="page hidden">
+            <div class="flex h-screen bg-gray-200">
+                <!-- Sidebar -->
+                <div class="w-64 bg-gray-800 text-white flex flex-col">
+                    <div class="flex items-center justify-center h-20 border-b border-gray-700">
+                        <i data-lucide="shield-check" class="w-8 h-8 mr-2"></i>
+                        <span class="text-2xl font-bold">管理后台</span>
+                    </div>
+                    <nav class="flex-1 px-4 py-6 space-y-2">
+                        <a href="javascript:void(0);" data-target="admin-dashboard-page" class="admin-nav-link flex items-center px-4 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i>仪表盘</a>
+                        <a href="javascript:void(0);" data-target="admin-users-page" class="admin-nav-link flex items-center px-4 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="users" class="w-5 h-5 mr-3"></i>用户管理</a>
+                        <a href="javascript:void(0);" data-target="admin-courses-page" class="admin-nav-link flex items-center px-4 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="book-marked" class="w-5 h-5 mr-3"></i>课程管理</a>
+                        <a href="javascript:void(0);" data-target="admin-articles-page" class="admin-nav-link flex items-center px-4 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="file-text" class="w-5 h-5 mr-3"></i>文章管理</a>
+                        <a href="javascript:void(0);" data-target="admin-community-page" class="admin-nav-link flex items-center px-4 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="messages-square" class="w-5 h-5 mr-3"></i>社区管理</a>
+                    </nav>
+                     <div class="p-4 border-t border-gray-700">
+                        <a href="javascript:void(0);" class="go-home flex items-center px-4 py-2 rounded-lg hover:bg-gray-700"><i data-lucide="log-out" class="w-5 h-5 mr-3"></i>返回网站</a>
+                    </div>
+                </div>
+                <!-- Main Content Area -->
+                <div class="flex-1 flex flex-col overflow-hidden">
+                     <header class="bg-white shadow-sm h-20 flex items-center justify-between px-8 flex-shrink-0">
+                        <h1 id="admin-main-title" class="text-2xl font-bold text-gray-800">仪表盘</h1>
+                        <div class="flex items-center">
+                            <span class="mr-4">欢迎, Admin</span>
+                            <img src="https://picsum.photos/seed/admin/40/40" class="w-10 h-10 rounded-full" alt="Admin Avatar">
+                        </div>
+                    </header>
+                    <main class="flex-1 p-8 overflow-y-auto">
+                        <!-- Admin Dashboard Content -->
+                        <div id="admin-dashboard-page-content" class="admin-content">
+                            <!-- Stats Cards -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                                <div class="bg-white p-6 rounded-lg shadow flex items-center"><i data-lucide="users" class="w-10 h-10 text-blue-500 mr-4"></i><div><p class="text-sm text-gray-500">用户总数</p><p class="text-3xl font-bold">1,280</p></div></div>
+                                <div class="bg-white p-6 rounded-lg shadow flex items-center"><i data-lucide="book-marked" class="w-10 h-10 text-red-500 mr-4"></i><div><p class="text-sm text-gray-500">课程数量</p><p class="text-3xl font-bold">32</p></div></div>
+                                <div class="bg-white p-6 rounded-lg shadow flex items-center"><i data-lucide="messages-square" class="w-10 h-10 text-cyan-500 mr-4"></i><div><p class="text-sm text-gray-500">社区帖子</p><p class="text-3xl font-bold">8,942</p></div></div>
+                                <div class="bg-white p-6 rounded-lg shadow flex items-center"><i data-lucide="file-text" class="w-10 h-10 text-green-500 mr-4"></i><div><p class="text-sm text-gray-500">科普文章</p><p class="text-3xl font-bold">156</p></div></div>
+                            </div>
+                        </div>
+                        <!-- Admin Course Management Content -->
+                        <div id="admin-courses-page-content" class="admin-content hidden">
+                            <div class="flex justify-between items-center mb-6">
+                                <h2 class="text-2xl font-bold">课程列表</h2>
+                                <button class="add-course-btn bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg inline-flex items-center"><i data-lucide="plus" class="w-5 h-5 mr-2"></i>添加新课程</button>
+                            </div>
+                            <div class="bg-white p-6 rounded-lg shadow overflow-x-auto">
+                                <table class="w-full text-left">
+                                    <thead><tr class="border-b bg-gray-50"><th class="p-3 font-semibold">课程封面</th><th class="p-3 font-semibold">课程标题</th><th class="p-3 font-semibold">讲师</th><th class="p-3 font-semibold">学员数</th><th class="p-3 font-semibold">状态</th><th class="p-3 font-semibold">操作</th></tr></thead>
+                                    <tbody>
+                                        <tr class="border-b hover:bg-gray-50">
+                                            <td class="p-3"><img src="https://picsum.photos/seed/course/100/60" class="w-24 h-14 object-cover rounded-md" alt="课程封面"></td>
+                                            <td class="p-3 font-medium">积极养育法</td>
+                                            <td class="p-3">王教授</td>
+                                            <td class="p-3">5,820</td>
+                                            <td class="p-3"><span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">已发布</span></td>
+                                            <td class="p-3 space-x-2 whitespace-nowrap"><button class="add-course-btn text-blue-600 hover:underline">编辑</button><button class="text-red-600 hover:underline">删除</button></td>
+                                        </tr>
+                                        <tr class="border-b hover:bg-gray-50">
+                                            <td class="p-3"><img src="https://picsum.photos/seed/emotion-course/100/60" class="w-24 h-14 object-cover rounded-md" alt="课程封面"></td>
+                                            <td class="p-3 font-medium">孩子的情绪与行为管理</td>
+                                            <td class="p-3">李老师</td>
+                                            <td class="p-3">3,150</td>
+                                            <td class="p-3"><span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">已发布</span></td>
+                                            <td class="p-3 space-x-2 whitespace-nowrap"><button class="add-course-btn text-blue-600 hover:underline">编辑</button><button class="text-red-600 hover:underline">删除</button></td>
+                                        </tr>
+                                         <tr class="border-b hover:bg-gray-50">
+                                            <td class="p-3"><img src="https://picsum.photos/seed/puzzle-course/100/60" class="w-24 h-14 object-cover rounded-md" alt="课程封面"></td>
+                                            <td class="p-3 font-medium">个性化照护方案设计</td>
+                                            <td class="p-3">张博士</td>
+                                            <td class="p-3">1,890</td>
+                                            <td class="p-3"><span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full">草稿</span></td>
+                                            <td class="p-3 space-x-2 whitespace-nowrap"><button class="add-course-btn text-blue-600 hover:underline">编辑</button><button class="text-red-600 hover:underline">删除</button></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                         <!-- Other admin contents would go here... -->
+                         <div id="admin-users-page-content" class="admin-content hidden"><h2 class="text-2xl font-bold">用户管理</h2></div>
+                         <div id="admin-articles-page-content" class="admin-content hidden"><h2 class="text-2xl font-bold">文章管理</h2></div>
+                         <div id="admin-community-page-content" class="admin-content hidden"><h2 class="text-2xl font-bold">社区管理</h2></div>
+                    </main>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ====================================================================== -->
+        <!-- Article Detail Page -->
+        <!-- ====================================================================== -->
+        <div id="article-detail-page" class="page hidden">
+            <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
+                <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+                    <a href="javascript:void(0);" class="go-home flex items-center space-x-2"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-teal-500"><path d="M17 14v-2a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v2"/><path d="M12 18c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"/><path d="M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2s10 4.477 10 10z"/><path d="m9.5 9.5 5 5"/><path d="m14.5 9.5-5 5"/></svg><span class="text-2xl font-bold text-gray-800">智护童行</span></a>
+                    <nav class="hidden md:flex space-x-8"><a href="javascript:void(0);" id="back-to-knowledge" class="text-gray-600 hover:text-teal-600 transition-colors">返回科普馆</a></nav>
+                    <div><button class="go-account bg-teal-500 text-white font-semibold px-5 py-2 rounded-full hover:bg-teal-600 transition-all shadow-sm">我的账户</button></div>
+                </div>
+            </header>
+            <main class="bg-white">
+                <div class="container mx-auto">
+                    <img id="article-cover-image" src="" alt="文章封面" class="w-full h-64 md:h-96 object-cover">
+                    <div class="max-w-4xl mx-auto px-6 py-12">
+                        <h1 id="article-title" class="text-4xl md:text-5xl font-bold mb-4"></h1>
+                        <div class="flex items-center text-gray-500 text-sm mb-8">
+                            <span id="article-date"></span>
+                            <span class="mx-2">&middot;</span>
+                            <span id="article-author"></span>
+                        </div>
+                        <article id="article-body" class="prose max-w-none"></article>
+                        <div class="mt-12 pt-6 border-t flex justify-between items-center">
+                             <p class="text-sm text-gray-500">觉得这篇文章有用吗？</p>
+                             <div class="flex space-x-4">
+                                <button class="flex items-center space-x-1 text-gray-500 hover:text-red-500 transition-colors"><i data-lucide="heart" class="w-5 h-5"></i><span>为我推荐更多</span></button>
+                                <button class="flex items-center space-x-1 text-gray-500 hover:text-green-500 transition-colors"><i data-lucide="share-2" class="w-5 h-5"></i><span>分享给朋友</span></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+             <footer class="bg-gray-800 text-white mt-16"><div class="container mx-auto px-6 py-12 text-center text-sm text-gray-400">
+                <p>&copy; 2025 智护童行. All Rights Reserved. &nbsp;&nbsp;&middot;&nbsp;&nbsp; 
+                   <a href="javascript:void(0);" class="go-to-admin-login hover:text-white">管理员入口</a>
+                </p>
+            </div></footer>
+        </div>
+        
+        <!-- ====================================================================== -->
+        <!-- Account Page -->
+        <!-- ====================================================================== -->
+        <div id="account-page" class="page hidden">
+             <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
+                <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+                    <a href="javascript:void(0);" class="go-home flex items-center space-x-2"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-teal-500"><path d="M17 14v-2a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v2"/><path d="M12 18c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"/><path d="M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2s10 4.477 10 10z"/><path d="m9.5 9.5 5 5"/><path d="m14.5 9.5-5 5"/></svg><span class="text-2xl font-bold text-gray-800">智护童行</span></a>
+                    <nav class="hidden md:flex space-x-8"><a href="javascript:void(0);" class="go-home text-gray-600 hover:text-teal-600 transition-colors">返回首页</a></nav>
+                    <div><button class="go-account bg-teal-500 text-white font-semibold px-5 py-2 rounded-full hover:bg-teal-600 transition-all shadow-sm">我的账户</button></div>
+                </div>
+            </header>
+            <main class="container mx-auto px-6 py-12 md:py-16">
+                <div class="max-w-4xl mx-auto">
+                    <div class="text-center mb-12">
+                        <h1 class="text-4xl md:text-5xl font-bold">我的账户</h1>
+                        <p class="text-lg text-gray-600 mt-4">管理您的个人信息、孩子信息和账户安全设置。</p>
+                    </div>
+
+                    <div class="bg-white p-8 rounded-2xl shadow-lg border space-y-10">
+                        <!-- Personal Profile -->
+                        <section>
+                            <div class="flex justify-between items-center pb-4 border-b">
+                                <h2 class="text-2xl font-bold">个人资料</h2>
+                                <button id="edit-profile-btn" class="text-sm font-semibold text-blue-600 hover:underline">编辑资料</button>
+                            </div>
+                            <div class="mt-6 flex items-center space-x-6">
+                                <img src="https://picsum.photos/seed/myavatar/100/100" class="w-24 h-24 rounded-full" alt="我的头像">
+                                <div>
+                                    <p><strong>昵称：</strong><span id="profile-name">阳光妈妈</span></p>
+                                    <p><strong>邮箱：</strong><span id="profile-email">sunny.mom@email.com</span></p>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Child Info -->
+                        <section>
+                             <div class="flex justify-between items-center pb-4 border-b">
+                                <h2 class="text-2xl font-bold">孩子信息</h2>
+                                <button id="manage-child-info-btn" class="text-sm font-semibold text-blue-600 hover:underline">管理孩子信息</button>
+                            </div>
+                            <div class="mt-6 bg-blue-50 p-6 rounded-xl border border-blue-200 flex items-center space-x-6">
+                               <img src="https://picsum.photos/seed/avatar1/80/80" class="w-20 h-20 rounded-full border-4 border-white shadow-md" alt="孩子头像">
+                                <div>
+                                    <h3 class="text-xl font-bold">宝宝：小太阳</h3>
+                                    <p class="text-gray-600">年龄：5岁3个月</p>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Account Security -->
+                        <section>
+                            <h2 class="text-2xl font-bold pb-4 border-b">账户安全</h2>
+                            <div class="mt-6 space-y-4">
+                                <a href="#" class="flex justify-between items-center p-4 rounded-lg hover:bg-gray-50">
+                                    <span>修改密码</span>
+                                    <i data-lucide="chevron-right" class="w-5 h-5 text-gray-400"></i>
+                                </a>
+                            </div>
+                        </section>
+
+                        <!-- Logout -->
+                        <section class="text-center pt-6">
+                            <button class="go-home w-full max-w-xs mx-auto bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg">退出登录</button>
+                        </section>
+                    </div>
+                </div>
+            </main>
+            <footer class="bg-gray-800 text-white mt-16"><div class="container mx-auto px-6 py-12 text-center text-sm text-gray-400">
+                <p>&copy; 2025 智护童行. All Rights Reserved. &nbsp;&nbsp;&middot;&nbsp;&nbsp; 
+                   <a href="javascript:void(0);" class="go-to-admin-login hover:text-white">管理员入口</a>
+                </p>
+            </div></footer>
+        </div>
+        
+        <!-- ====================================================================== -->
+        <!-- Game Task Page -->
+        <!-- ====================================================================== -->
+        <div id="game-task-page" class="page hidden">
+            <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50"><div class="container mx-auto px-6 py-4 flex justify-between items-center"><a href="javascript:void(0);" class="go-home flex items-center space-x-2"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-teal-500"><path d="M17 14v-2a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v2"/><path d="M12 18c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"/><path d="M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2s10 4.477 10 10z"/><path d="m9.5 9.5 5 5"/><path d="m14.5 9.5-5 5"/></svg><span class="text-2xl font-bold text-gray-800">智护童行</span></a><nav class="hidden md:flex space-x-8"><a href="javascript:void(0);" class="back-to-experience text-gray-600 hover:text-teal-600 transition-colors">返回体验馆</a></nav><div><button class="go-account bg-teal-500 text-white font-semibold px-5 py-2 rounded-full hover:bg-teal-600 transition-all shadow-sm">我的账户</button></div></div></header>
+            <main class="container mx-auto px-6 py-12 md:py-16">
+                <div class="max-w-3xl mx-auto text-center">
+                    <h1 class="text-4xl md:text-5xl font-bold">小小照护大任务</h1>
+                    <p class="text-lg text-gray-600 mt-4">情境：喂饭挑战</p>
+                </div>
+                <div class="mt-12 max-w-3xl mx-auto bg-white p-8 rounded-2xl shadow-lg border">
+                    <div class="flex flex-col md:flex-row items-center gap-8">
+                        <img src="https://picsum.photos/seed/kid-eating/200/200" class="w-40 h-40 rounded-full object-cover border-4 border-yellow-200">
+                        <div class="relative bg-yellow-100 p-6 rounded-xl">
+                            <div class="absolute -top-2 left-1/2 -translate-x-1/2 md:-left-2 md:top-1/2 md:-translate-y-1/2 w-4 h-4 bg-yellow-100 transform rotate-45"></div>
+                            <p class="text-lg font-medium text-gray-800">宝宝把头扭到了一边，紧紧闭着嘴说：“我不要吃西兰花！”</p>
+                        </div>
+                    </div>
+                    <div class="mt-8">
+                        <h3 class="text-xl font-bold text-center mb-6">您会怎么做？</h3>
+                        <div id="game-task-choices" class="grid grid-cols-1 gap-4">
+                            <button data-feedback="good" class="game-choice-btn w-full text-left p-4 bg-gray-50 hover:bg-teal-50 border border-gray-200 rounded-lg transition-all">A. “我们来玩个‘飞机’游戏吧，让西兰花小飞机飞到你的嘴巴里！”</button>
+                            <button data-feedback="bad" class="game-choice-btn w-full text-left p-4 bg-gray-50 hover:bg-teal-50 border border-gray-200 rounded-lg transition-all">B. “你必须把这个吃掉，不吃完不许玩玩具。”</button>
+                            <button data-feedback="ok" class="game-choice-btn w-full text-left p-4 bg-gray-50 hover:bg-teal-50 border border-gray-200 rounded-lg transition-all">C. “好吧，那我们先吃一口米饭，再试一小口西兰花好不好？”</button>
+                        </div>
+                        <div id="game-task-feedback" class="mt-8 hidden"></div>
+                    </div>
+                </div>
+            </main>
+            <footer class="bg-gray-800 text-white mt-16"><div class="container mx-auto px-6 py-12 text-center text-sm text-gray-400">
+                <p>&copy; 2025 智护童行. All Rights Reserved. &nbsp;&nbsp;&middot;&nbsp;&nbsp; 
+                   <a href="javascript:void(0);" class="go-to-admin-login hover:text-white">管理员入口</a>
+                </p>
+            </div></footer>
+        </div>
+        
+        <!-- ====================================================================== -->
+        <!-- Game Emotion Page -->
+        <!-- ====================================================================== -->
+        <div id="game-emotion-page" class="page hidden">
+            <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50"><div class="container mx-auto px-6 py-4 flex justify-between items-center"><a href="javascript:void(0);" class="go-home flex items-center space-x-2"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-teal-500"><path d="M17 14v-2a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v2"/><path d="M12 18c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"/><path d="M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2s10 4.477 10 10z"/><path d="m9.5 9.5 5 5"/><path d="m14.5 9.5-5 5"/></svg><span class="text-2xl font-bold text-gray-800">智护童行</span></a><nav class="hidden md:flex space-x-8"><a href="javascript:void(0);" class="back-to-experience text-gray-600 hover:text-teal-600 transition-colors">返回体验馆</a></nav><div><button class="go-account bg-teal-500 text-white font-semibold px-5 py-2 rounded-full hover:bg-teal-600 transition-all shadow-sm">我的账户</button></div></div></header>
+            <main class="container mx-auto px-6 py-12 md:py-16">
+                <div class="max-w-3xl mx-auto text-center">
+                    <h1 class="text-4xl md:text-5xl font-bold">情绪大冒险</h1>
+                    <p class="text-lg text-gray-600 mt-4">情境：超市里的“战争”</p>
+                </div>
+                <div class="mt-12 max-w-3xl mx-auto bg-white p-8 rounded-2xl shadow-lg border">
+                    <div class="flex flex-col md:flex-row items-center gap-8">
+                        <img src="https://picsum.photos/seed/kid-crying/200/200" class="w-40 h-40 rounded-full object-cover border-4 border-red-200">
+                        <div class="relative bg-red-100 p-6 rounded-xl">
+                            <div class="absolute -top-2 left-1/2 -translate-x-1/2 md:-left-2 md:top-1/2 md:-translate-y-1/2 w-4 h-4 bg-red-100 transform rotate-45"></div>
+                            <p class="text-lg font-medium text-gray-800">在超市玩具区，孩子抱着一个机器人大哭大闹：“我就要这个！我就要！”</p>
+                        </div>
+                    </div>
+                    <div class="mt-8">
+                        <h3 class="text-xl font-bold text-center mb-6">您会怎么做？</h3>
+                        <div id="game-emotion-choices" class="grid grid-cols-1 gap-4">
+                            <button data-feedback="bad" class="game-choice-btn w-full text-left p-4 bg-gray-50 hover:bg-teal-50 border border-gray-200 rounded-lg transition-all">A. “不许哭！家里那么多玩具了还买，快给我放下！”</button>
+                            <button data-feedback="good" class="game-choice-btn w-full text-left p-4 bg-gray-50 hover:bg-teal-50 border border-gray-200 rounded-lg transition-all">B. 蹲下来抱着他：“你很想要这个机器人对不对？它看起来确实很酷。但是我们今天出门前说好了不买玩具的。”</button>
+                            <button data-feedback="ok" class="game-choice-btn w-full text-left p-4 bg-gray-50 hover:bg-teal-50 border border-gray-200 rounded-lg transition-all">C. “好吧好吧，别哭了，就买这一次，下不为例啊。”</button>
+                        </div>
+                        <div id="game-emotion-feedback" class="mt-8 hidden"></div>
+                    </div>
+                </div>
+            </main>
+            <footer class="bg-gray-800 text-white mt-16"><div class="container mx-auto px-6 py-12 text-center text-sm text-gray-400">
+                <p>&copy; 2025 智护童行. All Rights Reserved. &nbsp;&nbsp;&middot;&nbsp;&nbsp; 
+                   <a href="javascript:void(0);" class="go-to-admin-login hover:text-white">管理员入口</a>
+                </p>
+            </div></footer>
+        </div>
+        
+        <!-- ====================================================================== -->
+        <!-- Game Hero Page -->
+        <!-- ====================================================================== -->
+        <div id="game-hero-page" class="page hidden">
+            <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50"><div class="container mx-auto px-6 py-4 flex justify-between items-center"><a href="javascript:void(0);" class="go-home flex items-center space-x-2"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-teal-500"><path d="M17 14v-2a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v2"/><path d="M12 18c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"/><path d="M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2s10 4.477 10 10z"/><path d="m9.5 9.5 5 5"/><path d="m14.5 9.5-5 5"/></svg><span class="text-2xl font-bold text-gray-800">智护童行</span></a><nav class="hidden md:flex space-x-8"><a href="javascript:void(0);" class="back-to-experience text-gray-600 hover:text-teal-600 transition-colors">返回体验馆</a></nav><div><button class="go-account bg-teal-500 text-white font-semibold px-5 py-2 rounded-full hover:bg-teal-600 transition-all shadow-sm">我的账户</button></div></div></header>
+            <main class="container mx-auto px-6 py-12 md:py-16">
+                <div class="max-w-3xl mx-auto text-center">
+                    <h1 class="text-4xl md:text-5xl font-bold">保护小英雄</h1>
+                    <p class="text-lg text-gray-600 mt-4">情境：厨房里的危险</p>
+                </div>
+                <div class="mt-12 max-w-3xl mx-auto bg-white p-8 rounded-2xl shadow-lg border">
+                    <div class="flex flex-col md:flex-row items-center gap-8">
+                        <img src="https://picsum.photos/seed/kid-kitchen/200/200" class="w-40 h-40 rounded-full object-cover border-4 border-indigo-200">
+                        <div class="relative bg-indigo-100 p-6 rounded-xl">
+                            <div class="absolute -top-2 left-1/2 -translate-x-1/2 md:-left-2 md:top-1/2 md:-translate-y-1/2 w-4 h-4 bg-indigo-100 transform rotate-45"></div>
+                            <p class="text-lg font-medium text-gray-800">您正在炒菜，孩子跑进厨房，踮起脚尖试图触摸灶台上的热锅。</p>
+                        </div>
+                    </div>
+                    <div class="mt-8">
+                        <h3 class="text-xl font-bold text-center mb-6">您会怎么做？</h3>
+                        <div id="game-hero-choices" class="grid grid-cols-1 gap-4">
+                            <button data-feedback="bad" class="game-choice-btn w-full text-left p-4 bg-gray-50 hover:bg-teal-50 border border-gray-200 rounded-lg transition-all">A. “别动！” 大喊一声，吓住孩子。</button>
+                            <button data-feedback="ok" class="game-choice-btn w-full text-left p-4 bg-gray-50 hover:bg-teal-50 border border-gray-200 rounded-lg transition-all">B. “宝宝快出去，这里危险！” 一边说一边把他推出厨房。</button>
+                            <button data-feedback="good" class="game-choice-btn w-full text-left p-4 bg-gray-50 hover:bg-teal-50 border border-gray-200 rounded-lg transition-all">C. 立刻关火，迅速将孩子抱离灶台，然后认真地告诉他：“锅很烫，会烫伤宝宝，所以不能碰。”</button>
+                        </div>
+                        <div id="game-hero-feedback" class="mt-8 hidden"></div>
+                    </div>
+                </div>
+            </main>
+            <footer class="bg-gray-800 text-white mt-16"><div class="container mx-auto px-6 py-12 text-center text-sm text-gray-400">
+                <p>&copy; 2025 智护童行. All Rights Reserved. &nbsp;&nbsp;&middot;&nbsp;&nbsp; 
+                   <a href="javascript:void(0);" class="go-to-admin-login hover:text-white">管理员入口</a>
+                </p>
+            </div></footer>
+        </div>
+        
+        <!-- ====================================================================== -->
+        <!-- Game Example Page -->
+        <!-- ====================================================================== -->
+        <div id="game-example-page" class="page hidden">
+            <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50"><div class="container mx-auto px-6 py-4 flex justify-between items-center"><a href="javascript:void(0);" class="go-home flex items-center space-x-2"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-teal-500"><path d="M17 14v-2a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v2"/><path d="M12 18c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"/><path d="M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2s10 4.477 10 10z"/><path d="m9.5 9.5 5 5"/><path d="m14.5 9.5-5 5"/></svg><span class="text-2xl font-bold text-gray-800">智护童行</span></a><nav class="hidden md:flex space-x-8"><a href="javascript:void(0);" class="back-to-experience text-gray-600 hover:text-teal-600 transition-colors">返回体验馆</a></nav><div><button class="go-account bg-teal-500 text-white font-semibold px-5 py-2 rounded-full hover:bg-teal-600 transition-all shadow-sm">我的账户</button></div></div></header>
+            <main class="container mx-auto px-6 py-12 md:py-16">
+                <div class="max-w-3xl mx-auto text-center">
+                    <h1 class="text-4xl md:text-5xl font-bold">榜样的力量</h1>
+                    <p class="text-lg text-gray-600 mt-4">情境：手机与陪伴</p>
+                </div>
+                <div class="mt-12 max-w-3xl mx-auto bg-white p-8 rounded-2xl shadow-lg border">
+                    <div class="flex flex-col md:flex-row items-center gap-8">
+                        <img src="https://picsum.photos/seed/kid-play/200/200" class="w-40 h-40 rounded-full object-cover border-4 border-pink-200">
+                        <div class="relative bg-pink-100 p-6 rounded-xl">
+                            <div class="absolute -top-2 left-1/2 -translate-x-1/2 md:-left-2 md:top-1/2 md:-translate-y-1/2 w-4 h-4 bg-pink-100 transform rotate-45"></div>
+                            <p class="text-lg font-medium text-gray-800">您正在沙发上刷手机，孩子拿着绘本跑过来：“妈妈/爸爸，给我讲个故事吧！”</p>
+                        </div>
+                    </div>
+                    <div class="mt-8">
+                        <h3 class="text-xl font-bold text-center mb-6">您会怎么做？</h3>
+                        <div id="game-example-choices" class="grid grid-cols-1 gap-4">
+                            <button data-feedback="good" class="game-choice-btn w-full text-left p-4 bg-gray-50 hover:bg-teal-50 border border-gray-200 rounded-lg transition-all">A. 立刻放下手机，热情地说：“好啊！你想听哪个故事？我们一起来看。”</button>
+                            <button data-feedback="bad" class="game-choice-btn w-full text-left p-4 bg-gray-50 hover:bg-teal-50 border border-gray-200 rounded-lg transition-all">B. 头也不抬地说：“等一下，我看完这个就来。” 然后继续刷手机。</button>
+                            <button data-feedback="ok" class="game-choice-btn w-full text-left p-4 bg-gray-50 hover:bg-teal-50 border border-gray-200 rounded-lg transition-all">C. “你自己先看一会儿，妈妈/爸爸有点累了。”</button>
+                        </div>
+                        <div id="game-example-feedback" class="mt-8 hidden"></div>
+                    </div>
+                </div>
+            </main>
+            <footer class="bg-gray-800 text-white mt-16"><div class="container mx-auto px-6 py-12 text-center text-sm text-gray-400">
+                <p>&copy; 2025 智护童行. All Rights Reserved. &nbsp;&nbsp;&middot;&nbsp;&nbsp; 
+                   <a href="javascript:void(0);" class="go-to-admin-login hover:text-white">管理员入口</a>
+                </p>
+            </div></footer>
+        </div>
+        
+        <!-- ====================================================================== -->
+        <!-- Manage Child Page (NEW) -->
+        <!-- ====================================================================== -->
+        <div id="manage-child-page" class="page hidden">
+             <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
+                <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+                    <a href="javascript:void(0);" class="go-home flex items-center space-x-2"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-teal-500"><path d="M17 14v-2a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v2"/><path d="M12 18c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"/><path d="M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2s10 4.477 10 10z"/><path d="m9.5 9.5 5 5"/><path d="m14.5 9.5-5 5"/></svg><span class="text-2xl font-bold text-gray-800">智护童行</span></a>
+                    <nav class="hidden md:flex space-x-8"><a href="javascript:void(0);" class="go-account text-gray-600 hover:text-teal-600 transition-colors">返回我的账户</a></nav>
+                    <div><button class="go-account bg-teal-500 text-white font-semibold px-5 py-2 rounded-full hover:bg-teal-600 transition-all shadow-sm">我的账户</button></div>
+                </div>
+            </header>
+            <main class="container mx-auto px-6 py-12 md:py-16">
+                <div class="max-w-4xl mx-auto">
+                    <div class="flex justify-between items-center mb-12">
+                        <h1 class="text-4xl md:text-5xl font-bold">管理孩子信息</h1>
+                        <button id="add-child-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg inline-flex items-center">
+                            <i data-lucide="plus" class="w-5 h-5 mr-2"></i>
+                            <span>添加新成员</span>
+                        </button>
+                    </div>
+                    <div class="space-y-6">
+                        <!-- Child Card 1 -->
+                        <div class="bg-white p-6 rounded-2xl shadow-lg border flex items-center justify-between">
+                            <div class="flex items-center space-x-6">
+                                <img src="https://picsum.photos/seed/avatar1/80/80" class="w-20 h-20 rounded-full" alt="孩子头像">
+                                <div>
+                                    <h3 class="text-xl font-bold">小太阳</h3>
+                                    <p class="text-gray-600">5岁3个月 &middot; 小王子</p>
+                                </div>
+                            </div>
+                            <div class="flex space-x-4">
+                                <button class="edit-child-btn text-blue-600 hover:underline">编辑</button>
+                                <button class="text-red-600 hover:underline">删除</button>
+                            </div>
+                        </div>
+                         <!-- Child Card 2 -->
+                        <div class="bg-white p-6 rounded-2xl shadow-lg border flex items-center justify-between">
+                            <div class="flex items-center space-x-6">
+                                <img src="https://picsum.photos/seed/avatar2/80/80" class="w-20 h-20 rounded-full" alt="孩子头像">
+                                <div>
+                                    <h3 class="text-xl font-bold">小月亮</h3>
+                                    <p class="text-gray-600">2岁1个月 &middot; 小公主</p>
+                                </div>
+                            </div>
+                            <div class="flex space-x-4">
+                                <button class="edit-child-btn text-blue-600 hover:underline">编辑</button>
+                                <button class="text-red-600 hover:underline">删除</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+            <footer class="bg-gray-800 text-white mt-16"><div class="container mx-auto px-6 py-12 text-center text-sm text-gray-400">
+                <p>&copy; 2025 智护童行. All Rights Reserved. &nbsp;&nbsp;&middot;&nbsp;&nbsp; 
+                   <a href="javascript:void(0);" class="go-to-admin-login hover:text-white">管理员入口</a>
+                </p>
+            </div></footer>
+        </div>
+
+    </div>
+
+    <!-- ====================================================================== -->
+    <!-- Modals -->
+    <!-- ====================================================================== -->
+    <div id="record-moment-modal" class="modal-overlay hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="modal-content bg-white w-full max-w-lg rounded-2xl shadow-xl p-8">
+            <div class="flex justify-between items-center mb-6"><h3 class="text-2xl font-bold">记录新的成长点滴</h3><button class="close-modal-btn text-gray-400 hover:text-gray-600">&times;</button></div>
+            <form><div class="space-y-6"><div><label for="moment-title" class="block text-sm font-medium text-gray-700 mb-1">标题</label><input type="text" id="moment-title" placeholder="例如：第一次自己走路" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500"></div><div><label for="moment-date" class="block text-sm font-medium text-gray-700 mb-1">日期</label><input type="date" id="moment-date" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500"></div><div><label for="moment-description" class="block text-sm font-medium text-gray-700 mb-1">内容描述</label><textarea id="moment-description" rows="4" placeholder="详细描述一下这个特别的时刻吧..." class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500"></textarea></div><div><label class="block text-sm font-medium text-gray-700 mb-1">上传照片</label><div class="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 px-6 py-10"><div class="text-center"><i data-lucide="image" class="mx-auto h-12 w-12 text-gray-300"></i><div class="mt-4 flex text-sm leading-6 text-gray-600"><label for="file-upload" class="relative cursor-pointer rounded-md bg-white font-semibold text-blue-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-blue-600 focus-within:ring-offset-2 hover:text-blue-500"><span>上传文件</span><input id="file-upload" name="file-upload" type="file" class="sr-only"></label><p class="pl-1">或拖拽到此处</p></div><p class="text-xs leading-5 text-gray-600">PNG, JPG, GIF up to 10MB</p></div></div></div></div><div class="mt-8 flex justify-end space-x-4"><button type="button" class="cancel-modal-btn bg-gray-100 text-gray-700 font-semibold px-6 py-2 rounded-lg hover:bg-gray-200">取消</button><button type="submit" class="bg-blue-600 text-white font-semibold px-6 py-2 rounded-lg hover:bg-blue-700">保存</button></div></form>
+        </div>
+    </div>
+    
+    <div id="create-post-modal" class="modal-overlay hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="modal-content bg-white w-full max-w-lg rounded-2xl shadow-xl p-8">
+            <div class="flex justify-between items-center mb-6"><h3 class="text-2xl font-bold">发表新帖</h3><button class="close-modal-btn text-gray-400 hover:text-gray-600">&times;</button></div>
+            <form id="create-post-form"><div class="space-y-6"><div><label for="post-title" class="block text-sm font-medium text-gray-700 mb-1">帖子标题</label><input type="text" id="post-title" placeholder="例如：#求助# 宝宝不爱吃饭怎么办？" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-cyan-500 focus:ring-cyan-500" required></div><div><label for="post-content" class="block text-sm font-medium text-gray-700 mb-1">详细内容</label><textarea id="post-content" rows="6" placeholder="请详细描述您的问题或分享您的经验..." class="w-full border-gray-300 rounded-lg shadow-sm focus:border-cyan-500 focus:ring-cyan-500" required></textarea></div></div><div class="mt-8 flex justify-end space-x-4"><button type="button" class="cancel-modal-btn bg-gray-100 text-gray-700 font-semibold px-6 py-2 rounded-lg hover:bg-gray-200">取消</button><button type="submit" class="bg-cyan-600 text-white font-semibold px-6 py-2 rounded-lg hover:bg-cyan-700">发布</button></div></form>
+        </div>
+    </div>
+    
+    <div id="course-modal" class="modal-overlay hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="modal-content bg-white w-full max-w-lg rounded-2xl shadow-xl p-8">
+            <div class="flex justify-between items-center mb-6"><h3 id="course-modal-title" class="text-2xl font-bold">添加新课程</h3><button class="close-modal-btn text-gray-400 hover:text-gray-600">&times;</button></div>
+            <form><div class="space-y-6">
+                <div><label for="course-title" class="block text-sm font-medium text-gray-700 mb-1">课程标题</label><input type="text" id="course-title" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-red-500 focus:ring-red-500"></div>
+                <div><label for="course-instructor" class="block text-sm font-medium text-gray-700 mb-1">讲师</label><input type="text" id="course-instructor" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-red-500 focus:ring-red-500"></div>
+                <div><label for="course-description" class="block text-sm font-medium text-gray-700 mb-1">课程描述</label><textarea id="course-description" rows="4" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-red-500 focus:ring-red-500"></textarea></div>
+                </div><div class="mt-8 flex justify-end space-x-4"><button type="button" class="cancel-modal-btn bg-gray-100 text-gray-700 font-semibold px-6 py-2 rounded-lg hover:bg-gray-200">取消</button><button type="submit" class="bg-red-600 text-white font-semibold px-6 py-2 rounded-lg hover:bg-red-700">保存课程</button></div></form>
+        </div>
+    </div>
+    
+    <div id="edit-profile-modal" class="modal-overlay hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="modal-content bg-white w-full max-w-lg rounded-2xl shadow-xl p-8">
+            <div class="flex justify-between items-center mb-6"><h3 class="text-2xl font-bold">编辑个人资料</h3><button class="close-modal-btn text-gray-400 hover:text-gray-600">&times;</button></div>
+            <form><div class="space-y-6">
+                <div><label for="profile-name-input" class="block text-sm font-medium text-gray-700 mb-1">昵称</label><input type="text" id="profile-name-input" value="阳光妈妈" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500"></div>
+                <div><label class="block text-sm font-medium text-gray-700 mb-1">头像</label><div class="mt-2 flex items-center space-x-4"><img src="https://picsum.photos/seed/myavatar/100/100" class="w-16 h-16 rounded-full" alt="当前头像"><button type="button" class="bg-white py-1.5 px-2.5 border border-gray-300 rounded-md shadow-sm text-sm font-semibold text-gray-700 hover:bg-gray-50">更换</button></div></div>
+            </div><div class="mt-8 flex justify-end space-x-4"><button type="button" class="cancel-modal-btn bg-gray-100 text-gray-700 font-semibold px-6 py-2 rounded-lg hover:bg-gray-200">取消</button><button type="submit" class="bg-blue-600 text-white font-semibold px-6 py-2 rounded-lg hover:bg-blue-700">保存</button></div></form>
+        </div>
+    </div>
+    
+    <div id="manage-child-modal" class="modal-overlay hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="modal-content bg-white w-full max-w-lg rounded-2xl shadow-xl p-8">
+            <div class="flex justify-between items-center mb-6"><h3 id="child-modal-title" class="text-2xl font-bold">添加新成员</h3><button class="close-modal-btn text-gray-400 hover:text-gray-600">&times;</button></div>
+            <form><div class="space-y-6">
+                <div><label for="child-name-input" class="block text-sm font-medium text-gray-700 mb-1">昵称</label><input type="text" id="child-name-input" placeholder="宝宝的小名" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500"></div>
+                <div><label for="child-birthday-input" class="block text-sm font-medium text-gray-700 mb-1">生日</label><input type="date" id="child-birthday-input" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500"></div>
+                <div><label class="block text-sm font-medium text-gray-700 mb-1">性别</label><div class="flex space-x-4 mt-2"><label class="flex items-center"><input type="radio" name="gender" class="h-4 w-4 text-blue-600 border-gray-300"> <span class="ml-2">小王子</span></label><label class="flex items-center"><input type="radio" name="gender" class="h-4 w-4 text-pink-600 border-gray-300"> <span class="ml-2">小公主</span></label></div></div>
+                <div><label class="block text-sm font-medium text-gray-700 mb-1">头像</label><div class="mt-2 flex items-center space-x-4"><img src="https://picsum.photos/seed/new-kid/100/100" class="w-16 h-16 rounded-full" alt="默认头像"><button type="button" class="bg-white py-1.5 px-2.5 border border-gray-300 rounded-md shadow-sm text-sm font-semibold text-gray-700 hover:bg-gray-50">更换</button></div></div>
+            </div><div class="mt-8 flex justify-end space-x-4"><button type="button" class="cancel-modal-btn bg-gray-100 text-gray-700 font-semibold px-6 py-2 rounded-lg hover:bg-gray-200">取消</button><button type="submit" class="bg-blue-600 text-white font-semibold px-6 py-2 rounded-lg hover:bg-blue-700">保存</button></div></form>
+        </div>
+    </div>
+
+    <script>
+        // --- Article Data ---
+        const articlesData = {
+            safety: {
+                title: "家庭安全隐患排查清单",
+                author: "智护童行专家团队",
+                date: "2025年6月28日",
+                image: "https://picsum.photos/seed/safety/1200/400",
+                content: `<p>对于充满好奇心和活力的孩子们来说，家是他们探索世界的第一站，但也可能隐藏着意想不到的危险。作为家长，定期排查并消除家中的安全隐患至关重要。我们为您准备了这份超全的家庭安全隐患排查清单，帮助您为孩子打造一个更安全的成长环境。</p><h2>客厅区域</h2><ul><li><strong>家具：</strong>所有高于60厘米的独立柜子（如书柜、斗柜）都应被固定在墙上，防止倾倒。</li><li><strong>桌角/茶几角：</strong>安装防撞角，避免孩子奔跑时撞伤。</li><li><strong>电源插座：</strong>使用安全插座保护盖，防止孩子将手指或异物插入。</li><li><strong>电线/电线板：</strong>收纳并固定好所有裸露的电线，电线板放置在孩子不易触及的地方。</li><li><strong>窗户/阳台：</strong>确保安装了限位器或防护栏，窗户旁不堆放可供攀爬的物品。</li></ul><h2>卧室区域</h2><h3>对于婴幼儿：</h3><ul><li><strong>婴儿床：</strong>栏杆间距应小于6厘米，床垫与床缘应紧密贴合。床上不应有多余的枕头、毛绒玩具或厚重的被褥，以防窒息风险。</li><li><strong>窗帘绳：</strong>使用无绳窗帘或将拉绳收纳在高处，避免缠绕风险。</li></ul><h3>对于大龄儿童：</h3><ul><li><strong>双层床：</strong>确保上铺有坚固的护栏，并教导孩子正确使用梯子。</li></ul><h2>厨房区域</h2><p>厨房是家庭安全的高风险区，建议在孩子无人看管时使用安全门栏进行隔离。</p><ul><li><strong>刀具/尖锐物品：</strong>存放在上锁的抽屉或孩子够不到的高处。</li><li><strong>清洁剂/化学品：</strong>存放在上锁的柜子中，切勿用饮料瓶分装。</li><li><strong>燃气灶：</strong>使用后及时关闭总阀门，安装燃气泄漏报警器。</li><li><strong>热水壶/热汤：</strong>放置在远离桌边的位置，避免孩子拉扯导致烫伤。</li></ul><h2>浴室区域</h2><ul><li><strong>防滑：</strong>在淋浴区和浴缸内外使用防滑垫。</li><li><strong>水温：</strong>将热水器温度设置在49摄氏度以下，防止烫伤。</li><li><strong>马桶：</strong>安装马桶盖安全锁，防止幼儿溺水或夹伤。</li><li><strong>药品/化妆品：</strong>存放在上锁的药箱或高处的柜子中。</li></ul><p>安全无小事，预防永远是第一位。建议您每个月都对照这份清单进行一次全面的家庭安全检查，为孩子的健康成长保驾护航。</p>`
+            },
+            emotion: {
+                title: "读懂孩子的“情绪风暴”",
+                author: "儿童心理专家 李老师",
+                date: "2025年6月25日",
+                image: "https://picsum.photos/seed/emotion/1200/400",
+                content: `<p>当2岁的孩子因为一块饼干在地上打滚，当5岁的孩子因为输了游戏而大发脾气，这些“情绪风暴”常常让家长感到头疼甚至束手无策。但其实，这是孩子成长过程中的正常现象。理解风暴背后的原因，是帮助孩子管理情绪的第一步。</p><h2>为什么孩子会情绪失控？</h2><p>主要原因在于，儿童的大脑前额叶皮层（负责理性思考、冲动控制的区域）尚未发育成熟。当他们遇到挫折、疲劳、饥饿或无法表达自己的需求时，情绪脑（杏仁核）会迅速占据主导，导致他们无法进行理性思考，只能通过哭闹、尖叫等最原始的方式来表达强烈的感受。</p><h2>“风暴”来临时，家长该怎么做？</h2><h3>第一步：保持冷静，确保安全</h3><p>您自己的冷静是孩子恢复平静的“定海神针”。首先确保孩子处于安全的环境，不会因为乱动而伤害到自己。深呼吸，告诉自己：“这只是一个阶段，他需要我的帮助。”</p><h3>第二步：共情倾听，命名情绪</h3><p>不要讲道理，也不要说“不许哭！”。蹲下来，用温和的语气帮助孩子说出他的感受。例如：“我知道你现在很生气，因为积木倒了。” 或者 “你很伤心，因为妈妈要离开了，是吗？” 帮助孩子命名情绪，能让他们感到被理解，这是情绪调节能力的基础。</p><h3>第三步：提供安抚，静待平息</h3><p>根据孩子的需要，可以给他一个拥抱，或者只是静静地陪在他身边。当风暴过去后，再和他一起讨论刚才发生了什么，以及下次可以怎么做。比如：“下次积木倒了，我们可以一起再把它搭起来。”</p><p>记住，处理情绪风暴不是一次性的战斗，而是日复一日的练习。通过每一次的温和引导，您都在帮助孩子建立更健康的情绪管理模式。</p>`
+            },
+            food: {
+                title: "婴幼儿辅食添加全攻略",
+                author: "营养师 张女士",
+                date: "2025年6月22日",
+                image: "https://picsum.photos/seed/food/1200/400",
+                content: "<p>辅食添加是宝宝从母乳或配方奶向成人饮食过渡的关键一步。科学地添加辅食，不仅能满足宝宝生长发育所需的营养，还能锻炼他们的咀嚼和吞咽能力。</p><h2>何时开始？</h2><p>世界卫生组织建议，在宝宝满6个月时开始添加辅食。过早添加可能增加过敏风险，过晚则可能导致营养不足。</p><h2>第一口辅食吃什么？</h2><p>富含铁的婴儿米粉是最佳选择。初次尝试时，应将米粉调得稀一些，用小勺喂给宝宝。观察3-5天，如无过敏反应，可逐渐增加稠度和量。</p><h2>添加原则</h2><ul><li>由少到多：从一小勺开始，逐渐增加。</li><li>由稀到稠：从液体状到泥糊状，再到半固体。</li><li>由一种到多种：每次只添加一种新食物，以便观察是否过敏。</li></ul>"
+            },
+            sleep: {
+                title: "告别夜醒：温柔的睡眠训练法",
+                author: "睡眠顾问 陈女士",
+                date: "2025年6月20日",
+                image: "https://picsum.photos/seed/sleep/1200/400",
+                content: "<p>频繁夜醒是许多家庭面临的睡眠难题。一个温柔且有效的睡眠训练法可以帮助宝宝（和您！）获得更好的休息。</p><h2>建立规律的睡前程序</h2><p>每天在同一时间开始一套固定的睡前程序，例如：洗澡 -> 换睡衣 -> 读绘本 -> 唱摇篮曲。这会给宝宝一个强烈的信号：该睡觉了。</p><h2>什么是“抱起放下法”？</h2><p>这是一种温和的训练方法。当宝宝在床上哭闹时，您可以将他抱起安抚，一旦他平静下来就立刻放回床上。您可能需要重复多次，但关键是让宝宝学会在自己的小床上入睡。</p><p>请记住，睡眠训练需要耐心和一致性。选择一个您和家人都能坚持下去的方法，并给予宝宝足够的时间去适应。</p>"
+            },
+            reading: {
+                title: "如何培养孩子的阅读习惯？",
+                author: "教育专家 赵老师",
+                date: "2025年6月18日",
+                image: "https://picsum.photos/seed/reading/1200/400",
+                content: "<p>让孩子爱上阅读，是送给他们一生最好的礼物。培养阅读习惯，越早开始越好。</p><h2>营造阅读氛围</h2><p>在家中创建一个舒适的阅读角，放置一个孩子可以轻松拿到的书架。让书籍成为家中随处可见的物品。家长自己也要养成阅读的习惯，成为孩子的榜样。</p><h2>从亲子共读开始</h2><p>每天固定一个时间进行亲子共读，哪怕只有15分钟。选择色彩鲜艳、故事有趣的绘本。用生动的语气朗读，鼓励孩子指认书中的图画，或者让他/她来“读”给你听。</p><h2>选择合适的书籍</h2><p>根据孩子的年龄和兴趣选择书籍。对于幼儿，布书、洞洞书和翻翻书都是很好的选择。对于大一点的孩子，可以带他们去图书馆或书店，让他们自己挑选感兴趣的书籍。</p>"
+            }
+        };
+
+        // --- Navigation Logic ---
+        const pages = document.querySelectorAll('.page');
+        const goHomeBtns = document.querySelectorAll('.go-home');
+        const goToFeaturesBtns = document.querySelectorAll('.go-features');
+        const goToCommunityBtns = document.querySelectorAll('.go-community');
+        const goToAccountBtns = document.querySelectorAll('.go-account');
+        const goToAssessmentBtn = document.getElementById('go-to-assessment');
+        const goToKnowledgeBtn = document.getElementById('go-to-knowledge');
+        const goToExperienceBtn = document.getElementById('go-to-experience');
+        const goToSupportBtn = document.getElementById('go-to-support');
+        const goToTrainingBtn = document.getElementById('go-to-training');
+        const startAssessmentBtns = document.querySelectorAll('.start-assessment-btn');
+        const goToAssessmentHallBtns = document.querySelectorAll('.go-to-assessment-hall');
+        const goToArchiveBtn = document.getElementById('go-to-archive');
+        const goToCourseDetailBtn = document.getElementById('go-to-course-detail');
+        const goToTrainingHallBtns = document.querySelectorAll('.go-to-training-hall');
+        const readArticleBtns = document.querySelectorAll('.read-article-btn');
+        const backToKnowledgeBtn = document.getElementById('back-to-knowledge');
+        const goToGameTaskBtn = document.getElementById('go-to-game-task');
+        const goToGameEmotionBtn = document.getElementById('go-to-game-emotion');
+        const goToGameHeroBtn = document.getElementById('go-to-game-hero');
+        const goToGameExampleBtn = document.getElementById('go-to-game-example');
+        const backToExperienceBtns = document.querySelectorAll('.back-to-experience');
+        const manageChildInfoBtn = document.getElementById('manage-child-info-btn');
+        
+        // Admin
+        const goToAdminLoginBtns = document.querySelectorAll('.go-to-admin-login');
+        const adminLoginForm = document.getElementById('admin-login-form');
+        const adminNavLinks = document.querySelectorAll('.admin-nav-link');
+        const adminContents = document.querySelectorAll('.admin-content');
+        const adminMainTitle = document.getElementById('admin-main-title');
+
+        // Modals
+        const recordMomentModal = document.getElementById('record-moment-modal');
+        const createPostModal = document.getElementById('create-post-modal');
+        const courseModal = document.getElementById('course-modal');
+        const editProfileModal = document.getElementById('edit-profile-modal');
+        const manageChildModal = document.getElementById('manage-child-modal');
+        const recordMomentBtn = document.getElementById('record-moment-btn');
+        const createPostBtn = document.getElementById('create-post-btn');
+        const addCourseBtns = document.querySelectorAll('.add-course-btn');
+        const editProfileBtn = document.getElementById('edit-profile-btn');
+        const addChildBtn = document.getElementById('add-child-btn');
+        const editChildBtns = document.querySelectorAll('.edit-child-btn');
+        const closeModalBtns = document.querySelectorAll('.close-modal-btn');
+        const cancelModalBtns = document.querySelectorAll('.cancel-modal-btn');
+
+
+        function navigateTo(pageId) {
+            window.scrollTo(0, 0); 
+            pages.forEach(page => {
+                page.id === pageId ? page.classList.remove('hidden') : page.classList.add('hidden');
+            });
+            lucide.createIcons();
+        }
+
+        function showModal(modal) { if (modal) modal.classList.remove('hidden'); }
+        function hideModal(modal) { if (modal) modal.classList.add('hidden'); }
+
+        // --- Article Display Logic ---
+        function displayArticle(articleId) {
+            const article = articlesData[articleId];
+            if (!article) {
+                console.error("Article not found:", articleId);
+                return;
+            }
+            document.getElementById('article-cover-image').src = article.image;
+            document.getElementById('article-title').textContent = article.title;
+            document.getElementById('article-date').textContent = `发布于 ${article.date}`;
+            document.getElementById('article-author').textContent = `作者：${article.author}`;
+            document.getElementById('article-body').innerHTML = article.content;
+            navigateTo('article-detail-page');
+        }
+
+
+        // Page navigation listeners
+        goToFeaturesBtns.forEach(btn => btn.addEventListener('click', () => navigateTo('features-page')));
+        goToCommunityBtns.forEach(btn => btn.addEventListener('click', () => navigateTo('community-page')));
+        goToAccountBtns.forEach(btn => btn.addEventListener('click', () => navigateTo('account-page')));
+        goToAssessmentBtn.addEventListener('click', () => navigateTo('assessment-page'));
+        goToKnowledgeBtn.addEventListener('click', () => navigateTo('knowledge-page'));
+        goToExperienceBtn.addEventListener('click', () => navigateTo('experience-page'));
+        goToSupportBtn.addEventListener('click', () => navigateTo('support-page'));
+        goToTrainingBtn.addEventListener('click', () => navigateTo('training-page'));
+        goHomeBtns.forEach(btn => btn.addEventListener('click', () => navigateTo('home-page')));
+        startAssessmentBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => navigateTo(`assessment-detail-${e.currentTarget.dataset.assessmentType}`));
+        });
+        goToAssessmentHallBtns.forEach(btn => btn.addEventListener('click', () => navigateTo('assessment-page')));
+        if (goToArchiveBtn) goToArchiveBtn.addEventListener('click', () => navigateTo('growth-archive-page'));
+        if (goToCourseDetailBtn) goToCourseDetailBtn.addEventListener('click', () => navigateTo('course-detail-page'));
+        goToTrainingHallBtns.forEach(btn => btn.addEventListener('click', () => navigateTo('training-page')));
+        readArticleBtns.forEach(btn => btn.addEventListener('click', (e) => displayArticle(e.currentTarget.dataset.articleId)));
+        if(backToKnowledgeBtn) backToKnowledgeBtn.addEventListener('click', () => navigateTo('knowledge-page'));
+        if(goToGameTaskBtn) goToGameTaskBtn.addEventListener('click', () => navigateTo('game-task-page'));
+        if(goToGameEmotionBtn) goToGameEmotionBtn.addEventListener('click', () => navigateTo('game-emotion-page'));
+        if(goToGameHeroBtn) goToGameHeroBtn.addEventListener('click', () => navigateTo('game-hero-page'));
+        if(goToGameExampleBtn) goToGameExampleBtn.addEventListener('click', () => navigateTo('game-example-page'));
+        backToExperienceBtns.forEach(btn => btn.addEventListener('click', () => navigateTo('experience-page')));
+        if(manageChildInfoBtn) manageChildInfoBtn.addEventListener('click', () => navigateTo('manage-child-page'));
+        
+        // Admin navigation
+        goToAdminLoginBtns.forEach(btn => btn.addEventListener('click', () => navigateTo('admin-login-page')));
+        if (adminLoginForm) {
+            adminLoginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                navigateTo('admin-dashboard');
+                adminNavLinks.forEach(link => link.classList.remove('active'));
+                document.querySelector('.admin-nav-link[data-target="admin-dashboard-page"]').classList.add('active');
+                adminContents.forEach(content => content.classList.add('hidden'));
+                document.getElementById('admin-dashboard-page-content').classList.remove('hidden');
+            });
+        }
+        
+        adminNavLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const targetId = e.currentTarget.dataset.target;
+                const targetContentId = `${targetId}-content`;
+                adminMainTitle.textContent = e.currentTarget.textContent;
+
+                adminNavLinks.forEach(nav => nav.classList.remove('active'));
+                e.currentTarget.classList.add('active');
+                
+                adminContents.forEach(content => content.classList.add('hidden'));
+                const targetContent = document.getElementById(targetContentId);
+                if(targetContent) targetContent.classList.remove('hidden');
+
+                lucide.createIcons();
+            });
+        });
+
+        // Modal logic
+        if (recordMomentBtn) recordMomentBtn.addEventListener('click', () => showModal(recordMomentModal));
+        if (createPostBtn) createPostBtn.addEventListener('click', () => showModal(createPostModal));
+        addCourseBtns.forEach(btn => btn.addEventListener('click', () => showModal(courseModal)));
+        if (editProfileBtn) editProfileBtn.addEventListener('click', () => showModal(editProfileModal));
+        if (addChildBtn) addChildBtn.addEventListener('click', () => showModal(manageChildModal));
+        editChildBtns.forEach(btn => btn.addEventListener('click', () => showModal(manageChildModal)));
+        
+        closeModalBtns.forEach(btn => btn.addEventListener('click', (e) => hideModal(e.target.closest('.modal-overlay'))));
+        cancelModalBtns.forEach(btn => btn.addEventListener('click', (e) => hideModal(e.target.closest('.modal-overlay'))));
+        
+        document.querySelectorAll('.modal-overlay').forEach(modal => {
+             modal.addEventListener('click', (e) => {
+                if (e.target === modal) hideModal(modal);
+            });
+        });
+
+        // --- Community Page Interaction Logic ---
+        function addCommunityInteraction(card) {
+             const likeBtn = card.querySelector('.like-btn');
+            if (likeBtn) {
+                likeBtn.addEventListener('click', () => {
+                    const likeIcon = likeBtn.querySelector('i');
+                    const likeCount = likeBtn.querySelector('.like-count');
+                    const isLiked = likeBtn.classList.toggle('text-red-500');
+                    let count = parseInt(likeCount.textContent);
+                    likeCount.textContent = isLiked ? count + 1 : count - 1;
+                    if(isLiked) {
+                        likeIcon.style.fill = 'currentColor';
+                    } else {
+                        likeIcon.style.fill = 'none';
+                    }
+                });
+            }
+
+            const commentBtn = card.querySelector('.comment-btn');
+            const commentSection = card.querySelector('.comment-section');
+            if (commentBtn && commentSection) {
+                commentBtn.addEventListener('click', () => {
+                    commentSection.classList.toggle('hidden');
+                    lucide.createIcons();
+                });
+            }
+
+            const commentForm = card.querySelector('.new-comment-form');
+            if(commentForm){
+                commentForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const input = commentForm.querySelector('.comment-input');
+                    const commentText = input.value;
+                    if(!commentText.trim()) return;
+
+                    const commentList = card.querySelector('.comment-list');
+                    const newCommentHTML = `
+                     <div class="flex items-start space-x-3">
+                        <img src="https://picsum.photos/seed/myavatar/32/32" class="w-8 h-8 rounded-full" alt="我的头像">
+                        <div class="flex-1 bg-gray-100 p-3 rounded-lg"><p class="text-sm"><strong class="font-semibold">我：</strong>${commentText}</p></div>
+                    </div>
+                    `;
+                    commentList.insertAdjacentHTML('beforeend', newCommentHTML);
+                    input.value = '';
+
+                    const commentCountSpan = card.querySelector('.comment-count');
+                    let currentCount = parseInt(commentCountSpan.textContent);
+                    commentCountSpan.textContent = currentCount + 1;
+                });
+            }
+        }
+        
+        document.querySelectorAll('.post-card').forEach(card => addCommunityInteraction(card));
+        
+        const createPostForm = document.getElementById('create-post-form');
+        if (createPostForm) {
+            createPostForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const title = document.getElementById('post-title').value;
+                const content = document.getElementById('post-content').value;
+                if (!title.trim() || !content.trim()) {
+                    return; // Basic validation
+                }
+
+                const newPostHTML = `
+                    <div class="post-card bg-white p-6 rounded-2xl shadow-md border">
+                        <div class="flex items-center mb-4">
+                            <img src="https://picsum.photos/seed/myavatar/48/48" class="w-12 h-12 rounded-full mr-4" alt="我的头像">
+                            <div>
+                                <h4 class="font-bold">我</h4>
+                                <p class="text-xs text-gray-500">发布于 刚刚</p>
+                            </div>
+                        </div>
+                        <h3 class="text-xl font-bold mb-3">${title}</h3>
+                        <p class="text-gray-700 mb-4">${content}</p>
+                        <div class="flex justify-between items-center text-gray-500 pt-4 border-t">
+                            <div class="flex space-x-6">
+                                <button class="like-btn flex items-center space-x-1 hover:text-red-500 transition-colors"><i data-lucide="heart" class="w-5 h-5"></i><span class="like-count">0</span></button>
+                                <button class="comment-btn flex items-center space-x-1 hover:text-blue-500 transition-colors"><i data-lucide="message-square" class="w-5 h-5"></i><span class="comment-count">0</span></button>
+                            </div>
+                            <button class="flex items-center space-x-1 hover:text-green-500 transition-colors"><i data-lucide="share-2" class="w-5 h-5"></i><span>转发</span></button>
+                        </div>
+                        <div class="comment-section hidden mt-6">
+                            <div class="comment-list space-y-4"></div>
+                            <form class="new-comment-form mt-4 flex items-center space-x-3">
+                                <img src="https://picsum.photos/seed/myavatar/32/32" class="w-8 h-8 rounded-full" alt="我的头像">
+                                <input type="text" placeholder="发表您的评论..." class="comment-input w-full border-gray-300 rounded-full shadow-sm focus:border-cyan-500 focus:ring-cyan-500 text-sm px-4 py-2">
+                                <button type="submit" class="bg-cyan-500 text-white font-semibold px-4 py-2 rounded-full hover:bg-cyan-600 text-sm">发送</button>
+                            </form>
+                        </div>
+                    </div>
+                `;
+
+                const communityFeed = document.getElementById('community-feed');
+                communityFeed.insertAdjacentHTML('afterbegin', newPostHTML);
+                const newCard = communityFeed.firstElementChild;
+                addCommunityInteraction(newCard); // Add listeners to the new card
+                lucide.createIcons(); // Re-render icons
+
+                createPostForm.reset();
+                hideModal(createPostModal);
+            });
+        }
+
+
+        // --- Tab Logic ---
+        function setupTabSwitching(buttonClass, contentClass, contentIdPrefix) {
+            const tabButtons = document.querySelectorAll(`.${buttonClass}`);
+            const tabContents = document.querySelectorAll(`.${contentClass}`);
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const tab = button.dataset.tab;
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    tabContents.forEach(content => {
+                        content.id === `${contentIdPrefix}-${tab}` ? content.classList.remove('hidden') : content.classList.add('hidden');
+                    });
+                });
+            });
+        }
+        
+        setupTabSwitching('knowledge-tab-button', 'knowledge-tab-content', 'knowledge-tab-content');
+        setupTabSwitching('archive-tab-button', 'archive-tab-content', 'archive-tab-content');
+        setupTabSwitching('course-tab-button', 'course-tab-content', 'course-tab-content');
+
+        // --- Game Logic ---
+        function setupGame(choicesId, feedbackId, feedbackMessages) {
+            const gameChoices = document.querySelectorAll(`#${choicesId} .game-choice-btn`);
+            const gameFeedbackEl = document.getElementById(feedbackId);
+            gameChoices.forEach(button => {
+                button.addEventListener('click', () => {
+                    const feedbackType = button.dataset.feedback;
+                    gameFeedbackEl.innerHTML = feedbackMessages[feedbackType];
+                    gameFeedbackEl.classList.remove('hidden');
+                    lucide.createIcons();
+                });
+            });
+        }
+
+        setupGame('game-task-choices', 'game-task-feedback', {
+            good: `<div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4" role="alert"><p class="font-bold">很好的尝试！</p><p>通过游戏化的方式转移孩子的注意力，可以有效降低他对不喜欢食物的抵触情绪，让进餐过程更愉快。</p></div>`,
+            bad: `<div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4" role="alert"><p class="font-bold">需要注意！</p><p>强迫进食可能会加剧孩子的抗拒心理，甚至引发权力斗争，对建立健康的饮食习惯不利。</p></div>`,
+            ok: `<div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4" role="alert"><p class="font-bold">可以尝试的方法。</p><p>这是一种谈判策略，短期内可能有效，但长期来看，我们更鼓励培养孩子主动尝试新食物的意愿，而不是将其作为交换条件。</p></div>`
+        });
+
+        setupGame('game-emotion-choices', 'game-emotion-feedback', {
+            bad: `<div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4" role="alert"><p class="font-bold">需要注意！</p><p>直接否定和压制孩子的情绪，会让孩子觉得自己的感受不被接纳，可能导致他未来不再愿意表达情绪，或者用更激烈的方式爆发。</p></div>`,
+            good: `<div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4" role="alert"><p class="font-bold">非常棒的应对！</p><p>首先共情并接纳孩子的情绪（“你很想要”），然后温和而坚定地重申规则（“我们说好了不买”）。这是处理孩子情绪问题的黄金法则。</p></div>`,
+            ok: `<div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4" role="alert"><p class="font-bold">可以理解，但有更好的方式。</p><p>用妥协来平息哭闹，虽然能快速解决当下的问题，但可能会让孩子学会“哭闹=得到满足”，不利于规则感的建立。</p></div>`
+        });
+        
+        setupGame('game-hero-choices', 'game-hero-feedback', {
+            bad: `<div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4" role="alert"><p class="font-bold">需要注意！</p><p>大声喊叫可能会让孩子受到惊吓，虽然能暂时阻止行为，但无法让他理解危险所在，还可能破坏亲子关系。</p></div>`,
+            ok: `<div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4" role="alert"><p class="font-bold">可以尝试，但不够理想。</p><p>将孩子推出厨房能避免眼前的危险，但没有进行及时的安全教育，孩子下次可能还会因为好奇而再次进入。</p></div>`,
+            good: `<div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4" role="alert"><p class="font-bold">非常棒的应对！</p><p>迅速将孩子带离危险源，然后用清晰、简单的语言解释危险，是最高效的安全教育方式。既保护了孩子，又教会了他知识。</p></div>`
+        });
+
+        setupGame('game-example-choices', 'game-example-feedback', {
+            good: `<div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4" role="alert"><p class="font-bold">高质量的陪伴！</p><p>立刻放下手机，积极回应孩子的需求，这向孩子传递了一个信息：你比手机更重要。这是建立亲密亲子关系的关键。</p></div>`,
+            bad: `<div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4" role="alert"><p class="font-bold">需要注意！</p><p>这种行为被称为“隐形失陪”，虽然人在场，但注意力完全不在孩子身上。长此以往，孩子会感到被忽视，不再愿意与您分享。</p></div>`,
+            ok: `<div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4" role="alert"><p class="font-bold">可以理解，但有更好的方式。</p><p>诚实地表达自己的感受（累了）是可以的，但如果频繁发生，孩子可能会解读为“爸爸/妈妈不想陪我”。更好的做法是：“爸爸/妈妈现在有点累，可以休息5分钟吗？之后我一定陪你读。”</p></div>`
+        });
+
+
+        // Initialize Lucide Icons
+        lucide.createIcons();
+    </script>
+</body>
+</html>

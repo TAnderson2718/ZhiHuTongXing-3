@@ -1,0 +1,192 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 用户模型
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  avatar    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 关联关系
+  children       Child[]
+  assessments    Assessment[]
+  growthRecords  GrowthRecord[]
+  posts          Post[]
+  comments       Comment[]
+  courseProgress CourseProgress[]
+  sessions       Session[]
+
+  @@map("users")
+}
+
+// 会话模型（用于认证）
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+// 孩子信息模型
+model Child {
+  id       String    @id @default(cuid())
+  name     String
+  birthday DateTime
+  gender   String // "male" or "female"
+  avatar   String?
+  userId   String
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assessments   Assessment[]
+  growthRecords GrowthRecord[]
+
+  @@map("children")
+}
+
+// 评估模型
+model Assessment {
+  id          String   @id @default(cuid())
+  type        String   // "comprehensive", "sdq", "embu"
+  title       String
+  description String?
+  status      String   @default("in_progress") // "in_progress", "completed"
+  score       Int?
+  result      Json?    // 存储评估结果的JSON数据
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userId  String
+  childId String?
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  child Child? @relation(fields: [childId], references: [id], onDelete: SetNull)
+
+  @@map("assessments")
+}
+
+// 成长记录模型
+model GrowthRecord {
+  id          String   @id @default(cuid())
+  title       String
+  content     String
+  date        DateTime
+  images      String[] // 图片URL数组
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userId  String
+  childId String
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@map("growth_records")
+}
+
+// 文章模型
+model Article {
+  id          String   @id @default(cuid())
+  title       String
+  content     String
+  author      String
+  category    String   // "life", "psychology", "safety", "education"
+  coverImage  String?
+  publishedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("articles")
+}
+
+// 社区帖子模型
+model Post {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  likes     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String
+  user   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  comments Comment[]
+
+  @@map("posts")
+}
+
+// 评论模型
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String
+  postId String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@map("comments")
+}
+
+// 课程模型
+model Course {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  instructor  String
+  coverImage  String?
+  content     String
+  duration    Int?     // 课程时长（分钟）
+  difficulty  String   @default("beginner") // "beginner", "intermediate", "advanced"
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  progress CourseProgress[]
+
+  @@map("courses")
+}
+
+// 课程进度模型
+model CourseProgress {
+  id           String   @id @default(cuid())
+  progress     Int      @default(0) // 进度百分比 0-100
+  completedAt  DateTime?
+  lastAccessAt DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  userId   String
+  courseId String
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  @@map("course_progress")
+}
