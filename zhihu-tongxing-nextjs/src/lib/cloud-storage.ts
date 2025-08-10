@@ -129,7 +129,7 @@ export class AliyunOSSService extends CloudStorageService {
         key,
         size: file.length,
         etag: result.etag,
-        cdnUrl: this.config.cdnDomain ? `${this.config.cdnDomain}/${key}` : undefined,
+        ...(this.config.cdnDomain && { cdnUrl: `${this.config.cdnDomain}/${key}` }),
         provider: 'aliyun-oss',
         uploadedAt: new Date(),
       }

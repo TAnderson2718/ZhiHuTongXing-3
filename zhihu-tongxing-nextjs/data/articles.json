@@ -98,5 +98,22 @@
     "rating": "0",
     "createdAt": "2025-08-03T08:56:25.748Z",
     "updatedAt": "2025-08-03T08:56:25.748Z"
+  },
+  {
+    "id": "1754818330572",
+    "title": "测试0810",
+    "excerpt": "123123",
+    "content": "123123",
+    "category": "life",
+    "tags": [],
+    "image": "https://i.postimg.cc/1tzTRDjX/rick-and-morty-wallpaper-preview.jpg",
+    "status": "published",
+    "author": "系统管理员",
+    "publishedAt": "2025-08-10",
+    "readTime": "1分钟",
+    "views": "0",
+    "rating": "0",
+    "createdAt": "2025-08-10T09:32:10.572Z",
+    "updatedAt": "2025-08-10T09:48:48.801Z"
   }
 ]

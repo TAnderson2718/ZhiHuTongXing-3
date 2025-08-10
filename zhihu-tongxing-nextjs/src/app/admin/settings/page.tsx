@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Input from "@/components/ui/Input"
 import { useAdminAuth } from '@/hooks/useAdminAuth'
 import {
@@ -48,6 +48,32 @@ export default function AdminSettingsPage() {
   })
 
   const [isSaving, setIsSaving] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+
+  // 加载设置数据
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const response = await fetch('/api/admin/settings', {
+          signal: AbortSignal.timeout(10000) // 10秒超时
+        })
+        if (response.ok) {
+          const result = await response.json()
+          if (result.success) {
+            setSettings(result.data)
+          }
+        }
+      } catch (error) {
+        console.error('加载设置失败:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    if (user) {
+      loadSettings()
+    }
+  }, [user])
 
   const handleInputChange = (field: keyof SystemSettings, value: any) => {
     setSettings(prev => ({
@@ -59,49 +85,41 @@ export default function AdminSettingsPage() {
   const handleSave = async () => {
     setIsSaving(true)
     try {
-      // 记录操作日志
-      if (user) {
-        await fetch('/api/admin/operation-logs', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            operationType: 'SETTINGS_UPDATE',
-            operationDescription: '更新系统设置',
-            targetResource: 'system-settings',
-            result: 'SUCCESS',
-            metadata: {
-              updatedSettings: Object.keys(settings)
-            }
-          })
-        })
-      }
+      const response = await fetch('/api/admin/settings', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(settings),
+        signal: AbortSignal.timeout(10000) // 10秒超时
+      })
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      alert('设置已保存成功！')
-    } catch (error) {
-      // 记录失败的操作日志
-      if (user) {
-        await fetch('/api/admin/operation-logs', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            operationType: 'SETTINGS_UPDATE',
-            operationDescription: '更新系统设置失败',
-            targetResource: 'system-settings',
-            result: 'FAILURE',
-            errorMessage: error instanceof Error ? error.message : '未知错误'
-          })
-        })
+      const result = await response.json()
+
+      if (result.success) {
+        alert('设置已保存成功！')
+        // 更新本地状态
+        setSettings(result.data)
+      } else {
+        alert(result.error || '保存失败，请重试。')
       }
+    } catch (error) {
+      console.error('保存设置失败:', error)
       alert('保存失败，请重试。')
     } finally {
       setIsSaving(false)
     }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-teal-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">加载设置中...</p>
+        </div>
+      </div>
+    )
   }
 
   return (

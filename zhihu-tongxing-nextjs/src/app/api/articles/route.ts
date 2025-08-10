@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { prisma } from '@/lib/prisma'
+import { loadArticles } from '@/lib/articleStorage'
 
 const articlesQuerySchema = z.object({
   category: z.string().optional(),
@@ -13,53 +13,44 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const query = articlesQuerySchema.parse({
-      category: searchParams.get('category'),
-      page: searchParams.get('page'),
-      limit: searchParams.get('limit'),
-      search: searchParams.get('search'),
+      category: searchParams.get('category') || undefined,
+      page: searchParams.get('page') || '1',
+      limit: searchParams.get('limit') || '10',
+      search: searchParams.get('search') || undefined,
     })
 
-    const skip = (query.page - 1) * query.limit
+    // 从文件系统加载文章
+    let articles = loadArticles()
     
-    // 构建查询条件
-    const where: any = {}
+    // 只返回已发布的文章
+    articles = articles.filter(article => article.status === 'published')
     
+    // 应用筛选条件
     if (query.category) {
-      where.category = query.category
+      articles = articles.filter(article => article.category === query.category)
     }
     
     if (query.search) {
-      where.OR = [
-        { title: { contains: query.search, mode: 'insensitive' } },
-        { content: { contains: query.search, mode: 'insensitive' } },
-      ]
+      const searchLower = query.search.toLowerCase()
+      articles = articles.filter(article =>
+        article.title.toLowerCase().includes(searchLower) ||
+        (article.excerpt && article.excerpt.toLowerCase().includes(searchLower)) ||
+        (article.content && article.content.toLowerCase().includes(searchLower))
+      )
     }
 
-    // 获取文章列表
-    const [articles, total] = await Promise.all([
-      prisma.article.findMany({
-        where,
-        skip,
-        take: query.limit,
-        orderBy: { publishedAt: 'desc' },
-        select: {
-          id: true,
-          title: true,
-          content: true,
-          author: true,
-          category: true,
-          coverImage: true,
-          publishedAt: true,
-          createdAt: true,
-        },
-      }),
-      prisma.article.count({ where }),
-    ])
+    // 按发布时间排序
+    articles.sort((a, b) => new Date(b.publishedAt || b.createdAt).getTime() - new Date(a.publishedAt || a.createdAt).getTime())
+
+    // 分页
+    const total = articles.length
+    const skip = (query.page - 1) * query.limit
+    const paginatedArticles = articles.slice(skip, skip + query.limit)
 
     // 处理文章内容，只返回摘要
-    const articlesWithExcerpt = articles.map(article => ({
+    const articlesWithExcerpt = paginatedArticles.map(article => ({
       ...article,
-      excerpt: article.content.replace(/<[^>]*>/g, '').substring(0, 200) + '...',
+      excerpt: article.excerpt || (article.content ? article.content.replace(/<[^>]*>/g, '').substring(0, 200) + '...' : ''),
       content: undefined, // 列表页不返回完整内容
     }))
 

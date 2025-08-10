@@ -132,7 +132,8 @@ export default function AssessmentStartPage() {
   const assessment = assessmentData[assessmentId as keyof typeof assessmentData]
 
   useEffect(() => {
-    if (!assessment) {
+    // 仅在客户端执行重定向
+    if (typeof window !== 'undefined' && !assessment) {
       router.push('/assessment')
     }
   }, [assessment, router])

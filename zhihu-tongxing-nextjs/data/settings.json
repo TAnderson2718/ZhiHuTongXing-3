@@ -1,0 +1,15 @@
+{
+  "siteName": "智护童行123",
+  "siteDescription": "专业的家庭教育与儿童照护平台，为每个家庭提供科学、专业的育儿指导和支持服务。123123",
+  "contactEmail": "test@zhihutongxing.com",
+  "supportPhone": "400-888888",
+  "address": "北京市123123",
+  "enableRegistration": true,
+  "maxFileUploadSize": 10,
+  "sessionTimeout": 30,
+  "passwordMinLength": 6,
+  "maintenanceMode": false,
+  "analyticsEnabled": true,
+  "logRetentionDays": 30,
+  "updatedAt": "2025-08-10T09:49:48.133Z"
+}

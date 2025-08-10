@@ -142,7 +142,6 @@ export default function AssessmentInfoPage() {
   const info = assessmentInfo[assessmentId as keyof typeof assessmentInfo]
 
   if (!info) {
-    router.push('/assessment')
     return <div>评估不存在</div>
   }
 

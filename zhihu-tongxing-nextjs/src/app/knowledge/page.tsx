@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Metadata } from 'next'
@@ -21,8 +21,8 @@ import Input from "@/components/ui/Input"
 import { articlesData } from '@/data/articles'
 import { extendedArticlesData } from '@/data/articles-extended'
 
-// 合并所有文章数据
-const allArticles = {
+// 合并静态文章数据作为备用
+const staticArticles = {
   ...articlesData,
   ...extendedArticlesData
 }
@@ -33,6 +33,55 @@ export default function KnowledgePage() {
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [displayedArticles, setDisplayedArticles] = useState(6)
   const [isCategoryLoading, setIsCategoryLoading] = useState(false)
+  const [allArticles, setAllArticles] = useState(staticArticles)
+  const [isLoading, setIsLoading] = useState(true)
+
+  // 从公开API获取已发布的文章
+  useEffect(() => {
+    const fetchArticles = async () => {
+      try {
+        const response = await fetch('/api/articles?limit=100', {
+          signal: AbortSignal.timeout(10000) // 10秒超时
+        })
+        if (response.ok) {
+          const result = await response.json()
+          if (result.success && result.data) {
+            // 转换API数据格式以匹配现有组件结构
+            const apiArticles = result.data.reduce((acc: any, article: any) => {
+              acc[article.id] = {
+                id: article.id,
+                title: article.title,
+                excerpt: article.excerpt,
+                content: article.content,
+                category: article.category,
+                image: article.image,
+                author: article.author,
+                publishedAt: article.publishedAt,
+                readTime: article.readTime,
+                views: article.views,
+                rating: article.rating
+              }
+              return acc
+            }, {})
+            
+            // 合并静态文章和API文章
+            setAllArticles({
+              ...staticArticles,
+              ...apiArticles
+            })
+          }
+        }
+      } catch (error) {
+        console.error('获取文章失败:', error)
+        // 如果API失败，使用静态数据
+        setAllArticles(staticArticles)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchArticles()
+  }, [])
 
   const categories = [
     {
@@ -41,7 +90,7 @@ export default function KnowledgePage() {
       description: '浏览所有分类的文章',
       icon: BookOpen,
       color: 'bg-blue-500',
-      count: Object.keys(allArticles).length
+      count: allArticles ? Object.keys(allArticles).length : 0
     },
     {
       id: 'life',
@@ -49,7 +98,7 @@ export default function KnowledgePage() {
       description: '日常生活中的照护知识和技巧',
       icon: Heart,
       color: 'bg-pink-500',
-      count: Object.values(allArticles).filter(article => article.category === 'life').length
+      count: allArticles ? Object.values(allArticles).filter(article => article && article.category === 'life').length : 0
     },
     {
       id: 'psychology',
@@ -57,7 +106,7 @@ export default function KnowledgePage() {
       description: '儿童心理发展和情绪管理',
       icon: Brain,
       color: 'bg-purple-500',
-      count: Object.values(allArticles).filter(article => article.category === 'psychology').length
+      count: allArticles ? Object.values(allArticles).filter(article => article && article.category === 'psychology').length : 0
     },
     {
       id: 'safety',
@@ -65,7 +114,7 @@ export default function KnowledgePage() {
       description: '家庭和外出安全防护措施',
       icon: Shield,
       color: 'bg-red-500',
-      count: Object.values(allArticles).filter(article => article.category === 'safety').length
+      count: allArticles ? Object.values(allArticles).filter(article => article && article.category === 'safety').length : 0
     },
     {
       id: 'education',
@@ -73,13 +122,24 @@ export default function KnowledgePage() {
       description: '早期教育和学习指导方法',
       icon: BookOpen,
       color: 'bg-green-500',
-      count: Object.values(allArticles).filter(article => article.category === 'education').length
+      count: allArticles ? Object.values(allArticles).filter(article => article && article.category === 'education').length : 0
     }
   ]
 
   // 根据当前选中的分类筛选文章
   const getFilteredArticles = () => {
-    const articlesArray = Object.values(allArticles)
+    if (!allArticles || typeof allArticles !== 'object') {
+      return []
+    }
+    const articlesArray = Object.values(allArticles).filter(article => article && article.id)
+    
+    // 按发布时间从新到旧排序
+    articlesArray.sort((a, b) => {
+      const dateA = new Date(a.publishedAt || a.createdAt).getTime()
+      const dateB = new Date(b.publishedAt || b.createdAt).getTime()
+      return dateB - dateA // 从新到旧
+    })
+    
     if (activeTab === 'all') {
       return articlesArray
     }
@@ -231,7 +291,7 @@ export default function KnowledgePage() {
                   </div>
                   
                   <div className="flex flex-wrap gap-2 mb-4">
-                    {article.tags.map((tag, index) => (
+                    {(Array.isArray(article.tags) ? article.tags : []).map((tag, index) => (
                       <span
                         key={index}
                         className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"

@@ -12,6 +12,8 @@ COPY . .
 
 # 安装依赖
 RUN npm ci
+# 安装 sharp 用于生产环境图片优化
+RUN npm install sharp
 
 # 创建数据目录
 RUN mkdir -p data

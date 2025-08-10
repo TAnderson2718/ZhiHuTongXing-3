@@ -135,7 +135,12 @@ export function loadArticles(): Article[] {
 
     if (fs.existsSync(ARTICLES_FILE)) {
       const data = fs.readFileSync(ARTICLES_FILE, 'utf8')
-      return JSON.parse(data)
+      const articles = JSON.parse(data) as Article[]
+      // 确保所有文章的tags都是数组类型
+      return articles.map(article => ({
+        ...article,
+        tags: Array.isArray(article.tags) ? article.tags : []
+      }))
     } else {
       // 如果文件不存在，创建默认数据文件
       saveArticles(defaultArticles)
@@ -165,7 +170,12 @@ export function saveArticles(articles: Article[]): void {
 // 添加新文章
 export function addArticle(article: Article): void {
   const articles = loadArticles()
-  articles.push(article)
+  // 确保tags是数组类型
+  const normalizedArticle = {
+    ...article,
+    tags: Array.isArray(article.tags) ? article.tags : []
+  }
+  articles.push(normalizedArticle)
   saveArticles(articles)
 }
 
@@ -178,7 +188,13 @@ export function updateArticle(id: string, updateData: Partial<Article>): Article
     return null
   }
   
-  articles[index] = { ...articles[index], ...updateData, updatedAt: new Date().toISOString() }
+  // 确保tags是数组类型
+  const normalizedUpdateData = {
+    ...updateData,
+    tags: updateData.tags ? (Array.isArray(updateData.tags) ? updateData.tags : []) : articles[index].tags
+  }
+  
+  articles[index] = { ...articles[index], ...normalizedUpdateData, updatedAt: new Date().toISOString() }
   saveArticles(articles)
   return articles[index]
 }

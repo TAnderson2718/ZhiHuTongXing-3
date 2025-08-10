@@ -1,7 +1,35 @@
+'use client'
+
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Heart, Mail, Phone, MapPin } from 'lucide-react'
 
 export default function Footer() {
+  const [settings, setSettings] = useState({
+    siteName: '智护童行',
+    contactEmail: 'support@zhihutongxing.com',
+    supportPhone: '400-123-4567',
+    address: '北京市朝阳区智护大厦'
+  })
+
+  useEffect(() => {
+    // 获取公开的系统设置
+    fetch('/api/settings', {
+      signal: AbortSignal.timeout(5000) // 5秒超时
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setSettings(prev => ({
+            ...prev,
+            ...data.data
+          }))
+        }
+      })
+      .catch(() => {
+        // 忽略错误，使用默认值
+      })
+  }, [])
   return (
     <footer className="bg-gray-900 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -63,15 +91,15 @@ export default function Footer() {
             <ul className="space-y-3">
               <li className="flex items-center space-x-2 text-gray-300">
                 <Mail className="w-4 h-4" />
-                <span className="text-sm">support@zhihutongxing.com</span>
+                <span className="text-sm">{settings.contactEmail}</span>
               </li>
               <li className="flex items-center space-x-2 text-gray-300">
                 <Phone className="w-4 h-4" />
-                <span className="text-sm">400-123-4567</span>
+                <span className="text-sm">{settings.supportPhone}</span>
               </li>
               <li className="flex items-center space-x-2 text-gray-300">
                 <MapPin className="w-4 h-4" />
-                <span className="text-sm">北京市朝阳区智护大厦</span>
+                <span className="text-sm">{settings.address}</span>
               </li>
             </ul>
           </div>
@@ -80,9 +108,21 @@ export default function Footer() {
         {/* 底部版权信息 */}
         <div className="border-t border-gray-800 mt-8 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className="text-gray-400 text-sm">
-              © 2025 智护童行. 保留所有权利.
-            </p>
+            <div className="text-center md:text-left">
+              <p className="text-gray-400 text-sm">
+                © 2025 智护童行. 保留所有权利.
+              </p>
+              <p className="text-gray-400 text-sm mt-1">
+                <a 
+                  href="https://beian.miit.gov.cn/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="hover:text-white transition-colors"
+                >
+                  黑ICP备2025041211号-1
+                </a>
+              </p>
+            </div>
             <div className="flex space-x-6 mt-4 md:mt-0">
               <Link href="/privacy" className="text-gray-400 hover:text-white text-sm transition-colors">
                 隐私政策

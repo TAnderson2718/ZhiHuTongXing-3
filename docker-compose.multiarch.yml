@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  zhihutongxing-app:
+    image: zhihutongxing-tcr.tencentcloudcr.com/project-zhihutongxing/app-zhihutongxing:latest
+    container_name: zhihutongxing-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - zhihutongxing-network
+
+networks:
+  zhihutongxing-network:
+    driver: bridge
+
+# 使用说明:
+# 1. 设置TCR登录凭据: export TCR_USERNAME=your_username && export TCR_PASSWORD=your_password
+# 2. 登录TCR: echo $TCR_PASSWORD | docker login zhihutongxing-tcr.tencentcloudcr.com --username $TCR_USERNAME --password-stdin
+# 3. 启动服务: docker-compose -f docker-compose.multiarch.yml up -d
+# 4. 查看日志: docker-compose -f docker-compose.multiarch.yml logs -f
+# 5. 停止服务: docker-compose -f docker-compose.multiarch.yml down

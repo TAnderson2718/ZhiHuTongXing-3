@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSessionFromRequest } from '@/lib/auth'
-import { getArticleById, updateArticle, deleteArticle } from '@/lib/articleStorage'
+import { getArticleById, updateArticle, deleteArticle, loadArticles } from '@/lib/articleStorage'
 
 
 // 验证管理员权限
@@ -77,28 +77,29 @@ export async function PUT(
     const { id } = params
     const body = await request.json()
 
-    const articleIndex = articles.findIndex(article => article.id === id)
-    if (articleIndex === -1) {
+    // 准备更新数据
+    const updateData = {
+      ...body,
+      updatedAt: new Date().toISOString()
+    }
+
+    // 如果状态改为已发布且之前没有发布时间，设置发布时间
+    if (body.status === 'published') {
+      const existingArticle = getArticleById(id)
+      if (existingArticle && !existingArticle.publishedAt) {
+        updateData.publishedAt = new Date().toISOString().split('T')[0]
+      }
+    }
+
+    // 使用持久化存储更新文章
+    const updatedArticle = updateArticle(id, updateData)
+
+    if (!updatedArticle) {
       return NextResponse.json(
         { success: false, error: '文章不存在' },
         { status: 404 }
       )
     }
-
-    // 更新文章
-    const updatedArticle = {
-      ...articles[articleIndex],
-      ...body,
-      id, // 确保ID不被覆盖
-      updatedAt: new Date().toISOString()
-    }
-
-    // 如果状态改为已发布且之前没有发布时间，设置发布时间
-    if (body.status === 'published' && !articles[articleIndex].publishedAt) {
-      updatedArticle.publishedAt = new Date().toISOString().split('T')[0]
-    }
-
-    articles[articleIndex] = updatedArticle
 
     return NextResponse.json({
       success: true,
@@ -130,16 +131,15 @@ export async function DELETE(
 
     const { id } = params
 
-    const articleIndex = articles.findIndex(article => article.id === id)
-    if (articleIndex === -1) {
+    // 使用持久化存储删除文章
+    const deletedArticle = deleteArticle(id)
+
+    if (!deletedArticle) {
       return NextResponse.json(
         { success: false, error: '文章不存在' },
         { status: 404 }
       )
     }
-
-    // 删除文章
-    const deletedArticle = articles.splice(articleIndex, 1)[0]
 
     return NextResponse.json({
       success: true,

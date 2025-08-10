@@ -53,7 +53,6 @@ const nextConfig = {
   // 支持视频文件上传
   experimental: {
     serverComponentsExternalPackages: ['sharp'],
-    isrMemoryCacheSize: 0,
   },
   // 启用 standalone 输出用于 Docker 部署
   output: 'standalone',
