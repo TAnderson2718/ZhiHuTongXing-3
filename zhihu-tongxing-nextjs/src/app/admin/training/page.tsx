@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import {
   GraduationCap,
@@ -24,12 +24,73 @@ import Button from '@/components/ui/button'
 import Input from "@/components/ui/Input"
 import { useAdminAuth } from '@/hooks/useAdminAuth'
 
+// 定义培训课程类型
+interface TrainingCourse {
+  id: string
+  title: string
+  type: string
+  category: string
+  instructor: string
+  duration: string
+  lessons: number
+  enrolled: number
+  rating: number
+  price: number
+  status: string
+  level: string
+  lastUpdated: string
+}
+
 export default function TrainingManagementPage() {
   const { user: adminUser, loading } = useAdminAuth()
   const [searchQuery, setSearchQuery] = useState('')
   const [filterType, setFilterType] = useState('all')
+  const [trainingCourses, setTrainingCourses] = useState<TrainingCourse[]>([])
+  const [isLoadingData, setIsLoadingData] = useState(true)
+  const [error, setError] = useState('')
 
-  const trainingCourses = [
+  // 从API获取培训课程列表
+  useEffect(() => {
+    if (adminUser) {
+      fetchTrainingCourses()
+    }
+  }, [adminUser, searchQuery, filterType])
+
+  const fetchTrainingCourses = async () => {
+    try {
+      setIsLoadingData(true)
+      const params = new URLSearchParams({
+        ...(searchQuery && { search: searchQuery }),
+        ...(filterType !== 'all' && { type: filterType })
+      })
+
+      const response = await fetch(`/api/admin/training?${params}`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success) {
+          setTrainingCourses(data.data.courses || [])
+        } else {
+          setError(data.error || '获取培训课程列表失败')
+        }
+      } else {
+        setError('获取培训课程列表失败')
+      }
+    } catch (err) {
+      console.error('Error fetching training courses:', err)
+      setError('网络错误，请稍后重试')
+    } finally {
+      setIsLoadingData(false)
+    }
+  }
+
+  const mockTrainingCourses = [
     {
       id: '1',
       title: '0-3岁婴幼儿发展与教育',
@@ -105,7 +166,7 @@ export default function TrainingManagementPage() {
       level: 'advanced',
       lastUpdated: '2025-01-05'
     }
-  ]
+  ] // 保留作为后备数据
 
   const stats = [
     { label: '培训课程', value: '28', icon: GraduationCap, color: 'bg-red-100 text-red-600' },
@@ -171,12 +232,31 @@ export default function TrainingManagementPage() {
     return matchesSearch && matchesFilter
   })
 
-  if (loading || !adminUser) {
+  if (loading || isLoadingData) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">验证登录状态...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">加载中...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-600 mb-4">
+            <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.694-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <p className="text-red-600 font-medium mb-2">加载失败</p>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <Button onClick={() => fetchTrainingCourses()} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+            重新加载
+          </Button>
         </div>
       </div>
     )

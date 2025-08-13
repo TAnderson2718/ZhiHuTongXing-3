@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import {
   HeadphonesIcon,
@@ -25,16 +25,63 @@ import Button from '@/components/ui/button'
 import Input from "@/components/ui/Input"
 import { useAdminAuth } from '@/hooks/useAdminAuth'
 
+// 定义统计数据类型
+interface SupportStat {
+  label: string
+  value: string
+  icon: string
+  color: string
+}
+
 export default function SupportManagementPage() {
   const { user: adminUser, loading } = useAdminAuth()
   const [activeTab, setActiveTab] = useState('consultations')
+  const [stats, setStats] = useState<SupportStat[]>([])
+  const [isLoadingStats, setIsLoadingStats] = useState(true)
+  const [error, setError] = useState('')
 
-  const stats = [
+  // 从API获取支持统计数据
+  useEffect(() => {
+    if (adminUser) {
+      fetchSupportStats()
+    }
+  }, [adminUser])
+
+  const fetchSupportStats = async () => {
+    try {
+      setIsLoadingStats(true)
+      const response = await fetch('/api/admin/support/stats', {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success) {
+          setStats(data.data.stats || [])
+        } else {
+          setError(data.error || '获取支持统计数据失败')
+        }
+      } else {
+        setError('获取支持统计数据失败')
+      }
+    } catch (err) {
+      console.error('Error fetching support stats:', err)
+      setError('网络错误，请稍后重试')
+    } finally {
+      setIsLoadingStats(false)
+    }
+  }
+
+  const mockStats = [
     { label: '在线咨询', value: '156', icon: MessageCircle, color: 'bg-blue-100 text-blue-600' },
     { label: '预约咨询', value: '89', icon: Calendar, color: 'bg-purple-100 text-purple-600' },
     { label: '邮件咨询', value: '234', icon: Mail, color: 'bg-green-100 text-green-600' },
     { label: '专家团队', value: '12', icon: Users, color: 'bg-orange-100 text-orange-600' }
-  ]
+  ] // 保留作为后备数据
 
   const consultations = [
     {

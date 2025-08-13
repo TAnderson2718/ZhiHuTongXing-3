@@ -3,82 +3,49 @@ import { ClipboardList, FileText, Users, Calendar, Plus, TrendingUp, Heart, Brai
 import { Card } from '@/components/ui/card'
 import Button from '@/components/ui/button'
 import { getSession } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
+
+// 图标映射
+const iconMap = {
+  ClipboardList,
+  FileText,
+  Users,
+  Heart,
+  Brain,
+  GraduationCap,
+  Calendar,
+  Plus,
+  TrendingUp
+}
 
 export default async function AssessmentPage() {
   const user = await getSession()
 
-  const assessmentTypes = [
-    {
-      id: 'comprehensive',
-      title: '综合能力评估',
-      description: '全面评估孩子的认知、语言、社交、运动等各方面发展水平',
-      duration: '30-45分钟',
-      ageRange: '2-12岁',
-      icon: ClipboardList,
-      color: 'bg-blue-500',
-      features: ['认知能力', '语言发展', '社交技能', '运动协调', '情绪管理']
-    },
-    {
-      id: 'sdq',
-      title: 'SDQ行为评估',
-      description: '儿童行为问题筛查量表，评估孩子的行为和情绪状态',
-      duration: '15-20分钟',
-      ageRange: '3-16岁',
-      icon: FileText,
-      color: 'bg-green-500',
-      features: ['情绪症状', '行为问题', '多动注意力', '同伴关系', '亲社会行为']
-    },
-    {
-      id: 'embu',
-      title: 'EMBU教养方式评估',
-      description: '评估父母的教养方式对孩子发展的影响',
-      duration: '20-25分钟',
-      ageRange: '适用于家长',
-      icon: Users,
-      color: 'bg-purple-500',
-      features: ['情感温暖', '拒绝否认', '过度保护', '偏爱被试', '惩罚严厉']
-    },
-    {
-      id: 'childcare-ability',
-      title: '儿童照护能力量表',
-      description: '评估父母在日常照护、健康管理、安全防护、情感支持等方面的能力',
-      duration: '25-30分钟',
-      ageRange: '适用于家长',
-      icon: Heart,
-      color: 'bg-red-500',
-      features: ['日常照护', '健康管理', '安全防护', '情感支持', '照护技能']
-    },
-    {
-      id: 'parent-child-relationship',
-      title: '亲子关系量表',
-      description: '评估亲子间的亲密度、沟通质量、冲突处理和共同活动等关系维度',
-      duration: '20-25分钟',
-      ageRange: '适用于家长',
-      icon: Heart,
-      color: 'bg-pink-500',
-      features: ['亲密度', '沟通质量', '冲突处理', '共同活动', '关系质量']
-    },
-    {
-      id: 'parental-self-efficacy',
-      title: '父母自我效能感量表',
-      description: '评估父母对自己育儿能力的信心和效能感水平',
-      duration: '15-20分钟',
-      ageRange: '适用于家长',
-      icon: Brain,
-      color: 'bg-indigo-500',
-      features: ['育儿信心', '问题解决能力', '情绪调节', '支持寻求', '自我效能']
-    },
-    {
-      id: 'parenting-competence',
-      title: '父母教养能力量表',
-      description: '全面评估父母的教养策略、行为管理、学习支持和社交指导能力',
-      duration: '30-35分钟',
-      ageRange: '适用于家长',
-      icon: GraduationCap,
-      color: 'bg-orange-500',
-      features: ['教养策略', '行为管理', '学习支持', '社交指导', '教养技能']
+  // 从数据库获取评估工具模板
+  const assessmentTemplates = await prisma.assessmentTemplate.findMany({
+    where: { isActive: true },
+    orderBy: { createdAt: 'asc' },
+    include: {
+      _count: {
+        select: {
+          assessments: true
+        }
+      }
     }
-  ]
+  })
+
+  // 转换数据格式以匹配前端组件需求
+  const assessmentTypes = assessmentTemplates.map(template => ({
+    id: template.type,
+    title: template.title,
+    description: template.description,
+    duration: template.duration,
+    ageRange: template.ageRange,
+    icon: iconMap[template.icon as keyof typeof iconMap] || ClipboardList,
+    color: template.color || 'bg-blue-500',
+    features: Array.isArray(template.features) ? template.features : [],
+    completions: template._count.assessments
+  }))
 
   const recentAssessments = [
     {

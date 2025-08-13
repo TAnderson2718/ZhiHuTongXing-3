@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getSessionFromRequest } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
 
 // Mock assessment data
 const mockAssessments = [
@@ -116,11 +118,13 @@ const mockAssessments = [
   }
 ]
 
+// 持久化存储的评估工具数组（简单的内存存储，实际项目中应使用数据库）
+let persistentAssessments = [...mockAssessments]
+
 // 验证管理员权限
 async function verifyAdminAuth(request: NextRequest) {
   try {
-    const { getSession } = await import('@/lib/auth')
-    const user = await getSession()
+    const user = await getSessionFromRequest(request)
 
     if (!user) {
       return { success: false, error: '未登录', status: 401 }
@@ -155,36 +159,67 @@ export async function GET(request: NextRequest) {
     const type = searchParams.get('type') || ''
     const status = searchParams.get('status') || ''
 
-    let filteredAssessments = [...mockAssessments]
+    // 构建数据库查询条件
+    const where: any = {}
 
-    // Apply filters
     if (search) {
-      filteredAssessments = filteredAssessments.filter(assessment =>
-        assessment.name.toLowerCase().includes(search.toLowerCase()) ||
-        assessment.description.toLowerCase().includes(search.toLowerCase())
-      )
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } }
+      ]
     }
 
     if (type) {
-      filteredAssessments = filteredAssessments.filter(assessment => assessment.type === type)
+      where.type = type
     }
 
-    if (status) {
-      filteredAssessments = filteredAssessments.filter(assessment => assessment.status === status)
+    if (status === 'active') {
+      where.isActive = true
+    } else if (status === 'draft') {
+      where.isActive = false
     }
 
-    // Pagination
-    const startIndex = (page - 1) * limit
-    const endIndex = startIndex + limit
-    const paginatedAssessments = filteredAssessments.slice(startIndex, endIndex)
+    // 获取总数
+    const total = await prisma.assessmentTemplate.count({ where })
+
+    // 获取分页数据
+    const templates = await prisma.assessmentTemplate.findMany({
+      where,
+      skip: (page - 1) * limit,
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        _count: {
+          select: {
+            assessments: true
+          }
+        }
+      }
+    })
+
+    // 转换数据格式以匹配前端期望
+    const assessments = templates.map(template => ({
+      id: template.id,
+      name: template.name,
+      type: template.type,
+      description: template.description,
+      ageRange: template.ageRange,
+      questions: template.questions ? (Array.isArray(template.questions) ? template.questions.length : 0) : 0,
+      completions: template._count.assessments,
+      status: template.isActive ? 'active' : 'draft',
+      lastUpdated: template.updatedAt.toISOString().split('T')[0],
+      category: template.category,
+      difficulty: template.difficulty,
+      estimatedTime: template.duration
+    }))
 
     return NextResponse.json({
-      assessments: paginatedAssessments,
+      assessments,
       pagination: {
         page,
         limit,
-        total: filteredAssessments.length,
-        totalPages: Math.ceil(filteredAssessments.length / limit)
+        total,
+        totalPages: Math.ceil(total / limit)
       }
     })
   } catch (error) {
@@ -196,8 +231,12 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Verify admin authentication
-    if (!verifyAdminAuth(request)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const authResult = await verifyAdminAuth(request)
+    if (!authResult.success) {
+      return NextResponse.json(
+        { success: false, error: authResult.error },
+        { status: authResult.status }
+      )
     }
 
     const body = await request.json()
@@ -208,25 +247,48 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    // Create new assessment
-    const newAssessment = {
-      id: (mockAssessments.length + 1).toString(),
-      name,
-      type,
-      description,
-      ageRange: ageRange || '全年龄段',
+    // 检查类型是否已存在
+    const existingTemplate = await prisma.assessmentTemplate.findFirst({
+      where: { type }
+    })
+
+    if (existingTemplate) {
+      return NextResponse.json({ error: 'Assessment type already exists' }, { status: 400 })
+    }
+
+    // 创建新的评估工具模板
+    const template = await prisma.assessmentTemplate.create({
+      data: {
+        name,
+        type,
+        title: name, // 使用name作为title
+        description,
+        ageRange: ageRange || '全年龄段',
+        duration: estimatedTime || '10-15分钟',
+        difficulty: difficulty || 'medium',
+        category: category || type,
+        questions: questions ? { count: questions } : null,
+        isActive: false // 新创建的默认为草稿状态
+      }
+    })
+
+    // 转换数据格式以匹配前端期望
+    const assessment = {
+      id: template.id,
+      name: template.name,
+      type: template.type,
+      description: template.description,
+      ageRange: template.ageRange,
       questions: questions || 0,
       completions: 0,
       status: 'draft',
-      lastUpdated: new Date().toISOString().split('T')[0],
-      category: category || type,
-      difficulty: difficulty || 'medium',
-      estimatedTime: estimatedTime || '10-15分钟'
+      lastUpdated: template.updatedAt.toISOString().split('T')[0],
+      category: template.category,
+      difficulty: template.difficulty,
+      estimatedTime: template.duration
     }
 
-    mockAssessments.push(newAssessment)
-
-    return NextResponse.json({ assessment: newAssessment }, { status: 201 })
+    return NextResponse.json({ id: template.id, assessment }, { status: 201 })
   } catch (error) {
     console.error('Error creating assessment:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -236,8 +298,12 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     // Verify admin authentication
-    if (!verifyAdminAuth(request)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const authResult = await verifyAdminAuth(request)
+    if (!authResult.success) {
+      return NextResponse.json(
+        { success: false, error: authResult.error },
+        { status: authResult.status }
+      )
     }
 
     const body = await request.json()

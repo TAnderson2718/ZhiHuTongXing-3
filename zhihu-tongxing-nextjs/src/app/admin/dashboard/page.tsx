@@ -31,11 +31,18 @@ export default function AdminDashboardPage() {
   const router = useRouter()
   const [adminUser, setAdminUser] = useState<any>(null)
   const [stats, setStats] = useState({
-    totalArticles: 12,
-    totalVideos: 8,
-    totalViews: 15600,
-    totalUsers: 1250
+    totalArticles: 0,
+    totalVideos: 0,
+    totalViews: 0,
+    totalUsers: 0,
+    totalAssessments: 0,
+    activeUsers: 0,
+    completedAssessments: 0,
+    averageRating: 0,
+    growthRate: 0
   })
+  const [isLoadingStats, setIsLoadingStats] = useState(true)
+  const [statsError, setStatsError] = useState('')
 
   useEffect(() => {
     // 检查管理员登录状态
@@ -50,6 +57,8 @@ export default function AdminDashboardPage() {
         }
 
         setAdminUser(data.data)
+        // 获取统计数据
+        fetchStats()
       } catch (error) {
         console.error('Auth check error:', error)
         router.push('/admin')
@@ -58,6 +67,37 @@ export default function AdminDashboardPage() {
 
     checkAuth()
   }, [router])
+
+  // 获取仪表板统计数据
+  const fetchStats = async () => {
+    try {
+      setIsLoadingStats(true)
+      const response = await fetch('/api/admin/dashboard/stats', {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success) {
+          setStats(data.data)
+        } else {
+          setStatsError(data.error || '获取统计数据失败')
+        }
+      } else {
+        setStatsError('获取统计数据失败')
+      }
+    } catch (err) {
+      console.error('Error fetching stats:', err)
+      setStatsError('网络错误，请稍后重试')
+    } finally {
+      setIsLoadingStats(false)
+    }
+  }
+
 
   const handleLogout = async () => {
     try {

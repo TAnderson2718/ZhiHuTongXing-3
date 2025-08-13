@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import {
   Gamepad2,
@@ -23,85 +23,114 @@ import Button from '@/components/ui/button'
 import Input from "@/components/ui/Input"
 import { useAdminAuth } from '@/hooks/useAdminAuth'
 
+// 定义统计数据类型
+interface ExperienceStat {
+  label: string
+  value: string
+  icon: string
+  color: string
+}
+
 export default function ExperienceManagementPage() {
   const { user: adminUser, loading } = useAdminAuth()
   const [searchQuery, setSearchQuery] = useState('')
   const [filterType, setFilterType] = useState('all')
+  const [stats, setStats] = useState<ExperienceStat[]>([])
+  const [isLoadingStats, setIsLoadingStats] = useState(true)
+  const [error, setError] = useState('')
+  const [experiences, setExperiences] = useState<any[]>([])
+  const [isLoadingExperiences, setIsLoadingExperiences] = useState(true)
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 0
+  })
 
-  const experienceContent = [
-    {
-      id: '1',
-      title: '日常照护挑战',
-      type: 'game',
-      description: '通过模拟日常照护场景，提升实际操作技能',
-      category: 'daily-care',
-      difficulty: 'beginner',
-      duration: '15-20分钟',
-      completions: 2450,
-      rating: 4.8,
-      status: 'active',
-      lastUpdated: '2025-01-15'
-    },
-    {
-      id: '2',
-      title: '情绪管理大冒险',
-      type: 'game',
-      description: '帮助孩子学习情绪识别和管理技巧',
-      category: 'emotion',
-      difficulty: 'intermediate',
-      duration: '20-25分钟',
-      completions: 1890,
-      rating: 4.7,
-      status: 'active',
-      lastUpdated: '2025-01-12'
-    },
-    {
-      id: '3',
-      title: '安全小卫士',
-      type: 'game',
-      description: '通过互动游戏学习家庭和户外安全知识',
-      category: 'safety',
-      difficulty: 'beginner',
-      duration: '10-15分钟',
-      completions: 3200,
-      rating: 4.9,
-      status: 'active',
-      lastUpdated: '2025-01-10'
-    },
-    {
-      id: '4',
-      title: '榜样力量',
-      type: 'game',
-      description: '通过角色扮演培养良好的行为习惯',
-      category: 'behavior',
-      difficulty: 'advanced',
-      duration: '25-30分钟',
-      completions: 1250,
-      rating: 4.6,
-      status: 'active',
-      lastUpdated: '2025-01-08'
-    },
-    {
-      id: '5',
-      title: '亲子沟通训练营',
-      type: 'tutorial',
-      description: '提供亲子沟通的实用技巧和方法',
-      category: 'communication',
-      difficulty: 'intermediate',
-      duration: '30-40分钟',
-      completions: 980,
-      rating: 4.5,
-      status: 'draft',
-      lastUpdated: '2025-01-05'
+  // 从API获取体验统计数据和体验内容
+  useEffect(() => {
+    if (adminUser) {
+      fetchExperienceStats()
+      fetchExperiences()
     }
-  ]
+  }, [adminUser])
 
-  const stats = [
-    { label: '体验内容', value: '24', icon: Gamepad2, color: 'bg-purple-100 text-purple-600' },
-    { label: '总完成次数', value: '12,450', icon: Play, color: 'bg-blue-100 text-blue-600' },
-    { label: '平均评分', value: '4.7', icon: Trophy, color: 'bg-yellow-100 text-yellow-600' },
-    { label: '活跃用户', value: '3,280', icon: Users, color: 'bg-green-100 text-green-600' }
-  ]
+  // 当搜索或筛选条件改变时重新获取数据
+  useEffect(() => {
+    if (adminUser) {
+      fetchExperiences()
+    }
+  }, [searchQuery, filterType, adminUser])
+
+  const fetchExperienceStats = async () => {
+    try {
+      setIsLoadingStats(true)
+      const response = await fetch('/api/admin/experience/stats', {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success) {
+          setStats(data.data.stats || [])
+        } else {
+          setError(data.error || '获取体验统计数据失败')
+        }
+      } else {
+        setError('获取体验统计数据失败')
+      }
+    } catch (err) {
+      console.error('Error fetching experience stats:', err)
+      setError('网络错误，请稍后重试')
+    } finally {
+      setIsLoadingStats(false)
+    }
+  }
+
+  const fetchExperiences = async () => {
+    try {
+      setIsLoadingExperiences(true)
+      const params = new URLSearchParams({
+        page: pagination.page.toString(),
+        limit: pagination.limit.toString()
+      })
+
+      if (searchQuery) {
+        params.append('search', searchQuery)
+      }
+
+      if (filterType && filterType !== 'all') {
+        params.append('type', filterType)
+      }
+
+      const response = await fetch(`/api/admin/experiences?${params}`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setExperiences(data.experiences || [])
+        setPagination(data.pagination || pagination)
+      } else {
+        setError('获取体验内容失败')
+      }
+    } catch (err) {
+      console.error('Error fetching experiences:', err)
+      setError('网络错误，请稍后重试')
+    } finally {
+      setIsLoadingExperiences(false)
+    }
+  }
+
+  // 删除硬编码数据，改为从API获取 // 保留作为后备数据
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -140,12 +169,7 @@ export default function ExperienceManagementPage() {
     return <span className={`px-2 py-1 text-xs font-semibold rounded-full ${difficultyInfo.color}`}>{difficultyInfo.label}</span>
   }
 
-  const filteredContent = experienceContent.filter(content => {
-    const matchesSearch = content.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         content.description.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesFilter = filterType === 'all' || content.type === filterType
-    return matchesSearch && matchesFilter
-  })
+  // 筛选逻辑已移至API端，直接使用experiences数据
 
   if (loading || !adminUser) {
     return (
@@ -235,7 +259,7 @@ export default function ExperienceManagementPage() {
         <Card className="p-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-lg font-semibold text-gray-900">体验内容列表</h2>
-            <span className="text-sm text-gray-500">共 {filteredContent.length} 个内容</span>
+            <span className="text-sm text-gray-500">共 {pagination.total} 个内容</span>
           </div>
           
           <div className="overflow-x-auto">
@@ -269,7 +293,19 @@ export default function ExperienceManagementPage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredContent.map((content) => (
+                {isLoadingExperiences ? (
+                  <tr>
+                    <td colSpan={8} className="px-6 py-4 text-center text-gray-500">
+                      加载中...
+                    </td>
+                  </tr>
+                ) : experiences.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="px-6 py-4 text-center text-gray-500">
+                      暂无体验内容
+                    </td>
+                  </tr>
+                ) : experiences.map((content) => (
                   <tr key={content.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>

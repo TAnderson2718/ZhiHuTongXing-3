@@ -1,5 +1,13 @@
+const { withSentryConfig } = require('@sentry/nextjs');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // 启用实验性功能
+  experimental: {
+    // 启用 instrumentation hook
+    instrumentationHook: true,
+  },
+
   images: {
     domains: [
       'picsum.photos',
@@ -56,12 +64,12 @@ const nextConfig = {
   },
   // 启用 standalone 输出用于 Docker 部署
   output: 'standalone',
-  // 暂时跳过类型检查和 ESLint 检查以完成构建
+  // 启用类型检查和 ESLint 检查以确保代码质量
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false,
   },
   // 跳过 API 路由的静态生成
   trailingSlash: false,
@@ -71,4 +79,25 @@ const nextConfig = {
 
 }
 
-module.exports = nextConfig
+// Sentry 配置选项
+const sentryWebpackPluginOptions = {
+  // 额外的配置选项
+  org: "thomas-7b",
+  project: "zhihutongxing",
+
+  // 只在生产环境上传 source maps
+  silent: process.env.NODE_ENV !== 'production',
+
+  // 上传 source maps 到 Sentry
+  widenClientFileUpload: true,
+
+  // 隐藏 source maps 从生成的包中
+  hideSourceMaps: true,
+
+  // 禁用自动释放创建
+  disableServerWebpackPlugin: process.env.NODE_ENV !== 'production',
+  disableClientWebpackPlugin: process.env.NODE_ENV !== 'production',
+};
+
+// 使用 Sentry 包装配置
+module.exports = withSentryConfig(nextConfig, sentryWebpackPluginOptions);

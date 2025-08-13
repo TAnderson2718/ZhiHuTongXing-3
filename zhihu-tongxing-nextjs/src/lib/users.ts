@@ -1,129 +1,170 @@
 // 共享用户数据管理模块
-// 在实际应用中，这应该是数据库操作
+// 使用 Prisma 连接 PostgreSQL 数据库
+
+import bcrypt from 'bcryptjs'
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
 
 export interface User {
   id: string
   email: string
-  password: string
+  password: string // 存储哈希后的密码
   name: string
   avatar: string | null
-  role: 'user' | 'admin'
-  phone?: string
-  bio?: string
-  birthDate?: string
-  createdAt?: string
+  role?: 'user' | 'admin'
+  phone?: string | undefined
+  bio?: string | undefined
+  birthDate?: string | undefined
+  createdAt?: Date | string | undefined
 }
 
-// 模拟用户数据存储
-let mockUsers: User[] = [
-  {
-    id: '1',
-    email: 'test@example.com',
-    password: '123456',
-    name: '测试用户',
-    avatar: null,
-    role: 'user',
-    phone: '13800138000',
-    bio: '这是一个测试用户的个人简介。',
-    birthDate: '1990-01-01',
-    createdAt: '2024-01-01T00:00:00.000Z',
-  },
-  {
-    id: '2',
-    email: 'admin@zhihutongxing.com',
-    password: 'Admin@2025!Secure#',
-    name: '管理员',
-    avatar: null,
-    role: 'admin',
-    phone: '13900139000',
-    bio: '智护童行平台管理员。',
-    birthDate: '1985-05-15',
-    createdAt: '2024-01-01T00:00:00.000Z',
-  },
-]
+// 使用 PostgreSQL 数据库代替 mock 数据
+// 所有用户数据现在存储在数据库中
 
 // 获取所有用户
-export function getAllUsers(): User[] {
-  return [...mockUsers]
+export async function getAllUsers(): Promise<User[]> {
+  const users = await prisma.user.findMany()
+  return users.map(user => ({
+    ...user,
+    role: 'user' as 'user' | 'admin' // 默认角色，实际应用中可以从数据库读取
+  }))
 }
 
 // 根据ID查找用户
-export function findUserById(id: string): User | undefined {
-  return mockUsers.find(user => user.id === id)
+export async function findUserById(id: string): Promise<User | null> {
+  const user = await prisma.user.findUnique({
+    where: { id }
+  })
+  if (!user) return null
+  return {
+    ...user,
+    role: user.email === 'admin@zhihutongxing.com' ? 'admin' : 'user' // 根据邮箱判断管理员角色
+  }
 }
 
 // 根据邮箱查找用户
-export function findUserByEmail(email: string): User | undefined {
-  return mockUsers.find(user => user.email === email)
-}
-
-// 根据邮箱和密码查找用户
-export function findUserByEmailAndPassword(email: string, password: string): User | undefined {
-  return mockUsers.find(user => user.email === email && user.password === password)
-}
-
-// 创建新用户
-export function createUser(userData: Omit<User, 'id' | 'createdAt'>): User {
-  const newUser: User = {
-    ...userData,
-    id: (mockUsers.length + 1).toString(),
-    createdAt: new Date().toISOString(),
+export async function findUserByEmail(email: string): Promise<User | null> {
+  const user = await prisma.user.findUnique({
+    where: { email }
+  })
+  if (!user) return null
+  return {
+    ...user,
+    role: email === 'admin@zhihutongxing.com' ? 'admin' : 'user' // 管理员邮箱检查
   }
-  
-  mockUsers.push(newUser)
-  return newUser
 }
 
-// 更新用户信息
-export function updateUser(id: string, updates: Partial<Omit<User, 'id'>>): User | null {
-  const userIndex = mockUsers.findIndex(user => user.id === id)
-  
-  if (userIndex === -1) {
+// 根据邮箱和密码查找用户（使用bcrypt验证）
+export async function findUserByEmailAndPassword(email: string, password: string): Promise<User | null> {
+  const user = await prisma.user.findUnique({
+    where: { email }
+  })
+  if (!user) {
     return null
   }
   
-  mockUsers[userIndex] = {
-    ...mockUsers[userIndex],
-    ...updates
+  const isPasswordValid = await bcrypt.compare(password, user.password)
+  if (!isPasswordValid) {
+    return null
   }
   
-  return mockUsers[userIndex]
+  return {
+    ...user,
+    role: email === 'admin@zhihutongxing.com' ? 'admin' : 'user' // 管理员邮箱检查
+  }
 }
 
-// 更新用户密码
-export function updateUserPassword(id: string, newPassword: string): boolean {
-  const userIndex = mockUsers.findIndex(user => user.id === id)
+// 创建新用户（密码自动哈希）
+export async function createUser(userData: Omit<User, 'id' | 'createdAt' | 'password'> & { password: string }): Promise<User> {
+  const hashedPassword = await bcrypt.hash(userData.password, 12)
   
-  if (userIndex === -1) {
+  const newUser = await prisma.user.create({
+    data: {
+      email: userData.email,
+      password: hashedPassword,
+      name: userData.name,
+      avatar: userData.avatar
+      // 注意：phone, bio, birthDate 等字段在当前 schema 中不存在
+    }
+  })
+  
+  return {
+    ...newUser,
+    role: userData.email === 'admin@zhihutongxing.com' ? 'admin' : 'user',
+    phone: userData.phone, // 保持接口兼容性，但不存储到数据库
+    bio: userData.bio,
+    birthDate: userData.birthDate
+  }
+}
+
+// 更新用户信息
+export async function updateUser(id: string, updates: Partial<Omit<User, 'id'>>): Promise<User | null> {
+  try {
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      data: {
+        ...(updates.email && { email: updates.email }),
+        ...(updates.password && { password: updates.password }),
+        ...(updates.name && { name: updates.name }),
+        ...(updates.avatar !== undefined && { avatar: updates.avatar })
+        // 注意：phone, bio, birthDate 等字段在当前 schema 中不存在
+      }
+    })
+    
+    return {
+      ...updatedUser,
+      role: updatedUser.email === 'admin@zhihutongxing.com' ? 'admin' : 'user',
+      phone: updates.phone, // 保持接口兼容性
+      bio: updates.bio,
+      birthDate: updates.birthDate
+    }
+  } catch (error) {
+    return null
+  }
+}
+
+// 更新用户密码（自动哈希）
+export async function updateUserPassword(id: string, newPassword: string): Promise<boolean> {
+  try {
+    const hashedPassword = await bcrypt.hash(newPassword, 12)
+    await prisma.user.update({
+      where: { id },
+      data: { password: hashedPassword }
+    })
+    return true
+  } catch (error) {
     return false
   }
-  
-  mockUsers[userIndex].password = newPassword
-  return true
 }
 
 // 删除用户
-export function deleteUser(id: string): boolean {
-  const userIndex = mockUsers.findIndex(user => user.id === id)
-  
-  if (userIndex === -1) {
+export async function deleteUser(id: string): Promise<boolean> {
+  try {
+    await prisma.user.delete({
+      where: { id }
+    })
+    return true
+  } catch (error) {
     return false
   }
-  
-  mockUsers.splice(userIndex, 1)
-  return true
 }
 
 // 检查邮箱是否已存在
-export function isEmailExists(email: string): boolean {
-  return mockUsers.some(user => user.email === email)
+export async function isEmailExists(email: string): Promise<boolean> {
+  const user = await prisma.user.findUnique({
+    where: { email }
+  })
+  return user !== null
 }
 
 // 获取用户统计信息
-export function getUserStats() {
-  const totalUsers = mockUsers.length
-  const adminUsers = mockUsers.filter(user => user.role === 'admin').length
-  const regularUsers = mockUsers.filter(user => user.role === 'user').length
+export async function getUserStats() {
+  const totalUsers = await prisma.user.count()
+  const adminUsers = await prisma.user.count({
+    where: { email: 'admin@zhihutongxing.com' }
+  })
+  const regularUsers = totalUsers - adminUsers
   
   return {
     total: totalUsers,

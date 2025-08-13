@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, Calendar, Clock, User, Phone, Mail, CheckCircle } from 'lucide-react'
 import Button from '@/components/ui/button'
@@ -18,8 +18,43 @@ export default function AppointmentPage() {
     description: ''
   })
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const [experts, setExperts] = useState<any[]>([])
+  const [isLoadingExperts, setIsLoadingExperts] = useState(true)
 
-  const experts = [
+  // 从API获取专家数据
+  useEffect(() => {
+    fetchExperts()
+  }, [])
+
+  const fetchExperts = async () => {
+    try {
+      setIsLoadingExperts(true)
+      const response = await fetch('/api/experts?available=true', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        if (result.success) {
+          setExperts(result.data || [])
+        } else {
+          setExperts(fallbackExperts) // 使用备用数据
+        }
+      } else {
+        setExperts(fallbackExperts) // 使用备用数据
+      }
+    } catch (err) {
+      console.error('Error fetching experts:', err)
+      setExperts(fallbackExperts) // 使用备用数据
+    } finally {
+      setIsLoadingExperts(false)
+    }
+  }
+
+  const fallbackExperts = [
     {
       id: 'dr-wang',
       name: '王教授',
@@ -160,7 +195,15 @@ export default function AppointmentPage() {
             <Card className="p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">选择专家</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {experts.map((expert) => (
+                {isLoadingExperts ? (
+                  <div className="col-span-2 text-center py-8 text-gray-500">
+                    加载专家信息中...
+                  </div>
+                ) : experts.length === 0 ? (
+                  <div className="col-span-2 text-center py-8 text-gray-500">
+                    暂无可用专家
+                  </div>
+                ) : experts.map((expert) => (
                   <div
                     key={expert.id}
                     className={`p-4 border rounded-lg cursor-pointer transition-colors ${

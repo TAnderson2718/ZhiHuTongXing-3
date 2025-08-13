@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { Card } from '@/components/ui/card'
 import Button from '@/components/ui/button'
 import Input from "@/components/ui/Input"
-import { ArrowLeft, Save, Eye, Loader2 } from 'lucide-react'
+import { ArrowLeft, Save, Eye, Loader2, Edit3 } from 'lucide-react'
 import { useAdminAuth } from '@/hooks/useAdminAuth'
 
 export default function EditAssessmentPage() {
@@ -315,15 +315,23 @@ export default function EditAssessmentPage() {
 
           {/* Action Buttons */}
           <div className="flex justify-between">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handlePreview}
-              className="flex items-center"
-            >
-              <Eye className="w-4 h-4 mr-2" />
-              预览
-            </Button>
+            <div className="flex space-x-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handlePreview}
+                className="flex items-center"
+              >
+                <Eye className="w-4 h-4 mr-2" />
+                预览
+              </Button>
+              <Button asChild variant="outline" className="flex items-center">
+                <Link href={`/admin/assessment/edit/${assessmentId}/questions`}>
+                  <Edit3 className="w-4 h-4 mr-2" />
+                  编辑题目
+                </Link>
+              </Button>
+            </div>
 
             <div className="flex space-x-4">
               <Button asChild variant="outline">

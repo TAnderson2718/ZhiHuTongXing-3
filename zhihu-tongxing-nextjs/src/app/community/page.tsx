@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Users, MessageCircle, Heart, Share2, TrendingUp, Plus, Search, Filter, X } from 'lucide-react'
 import Button from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -95,10 +95,49 @@ export default function CommunityPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('全部')
   const [showFilters, setShowFilters] = useState(false)
+  const [posts, setPosts] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  // 从API获取帖子数据
+  useEffect(() => {
+    fetchPosts()
+  }, [])
+
+  const fetchPosts = async () => {
+    try {
+      setIsLoading(true)
+      const response = await fetch('/api/posts', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        if (result.success) {
+          setPosts(result.data || [])
+        } else {
+          setError(result.error || '获取帖子失败')
+          setPosts(mockPosts) // 使用备用数据
+        }
+      } else {
+        setError('获取帖子失败')
+        setPosts(mockPosts) // 使用备用数据
+      }
+    } catch (err) {
+      console.error('Error fetching posts:', err)
+      setError('网络错误，请稍后重试')
+      setPosts(mockPosts) // 使用备用数据
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   // Filter posts based on search term and category
   const filteredPosts = useMemo(() => {
-    let filtered = mockPosts
+    let filtered = posts
 
     // Filter by search term
     if (searchTerm.trim()) {
@@ -117,7 +156,7 @@ export default function CommunityPage() {
     }
 
     return filtered
-  }, [searchTerm, selectedCategory])
+  }, [searchTerm, selectedCategory, posts])
 
   // Separate hot and recent posts
   const hotPosts = filteredPosts.filter(post => post.type === 'hot')

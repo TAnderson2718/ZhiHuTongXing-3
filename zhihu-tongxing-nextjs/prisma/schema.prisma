@@ -21,13 +21,18 @@ model User {
   updatedAt DateTime @updatedAt
 
   // 关联关系
-  children       Child[]
-  assessments    Assessment[]
-  growthRecords  GrowthRecord[]
-  posts          Post[]
-  comments       Comment[]
-  courseProgress CourseProgress[]
-  sessions       Session[]
+  children           Child[]
+  assessments        Assessment[]
+  growthRecords      GrowthRecord[]
+  posts              Post[]
+  comments           Comment[]
+  courseProgress     CourseProgress[]
+  sessions           Session[]
+  articleFavorites   ArticleFavorite[]
+  articleReadHistory ArticleReadHistory[]
+  experienceProgress ExperienceProgress[]
+  experienceReviews  ExperienceReview[]
+  consultations      Consultation[]
 
   @@map("users")
 }
@@ -64,15 +69,42 @@ model Child {
   @@map("children")
 }
 
-// 评估模型
+// 评估工具模板模型
+model AssessmentTemplate {
+  id            String   @id @default(cuid())
+  name          String   // 评估工具名称
+  type          String   // 评估类型标识符
+  title         String   // 显示标题
+  description   String   // 描述
+  ageRange      String   // 适用年龄范围
+  duration      String   // 预计用时
+  difficulty    String   @default("medium") // "low", "medium", "high"
+  category      String   // 分类
+  icon          String?  // 图标名称
+  color         String?  // 颜色类名
+  features      Json?    // 功能特性列表
+  questions     Json?    // 问题内容
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // 关联的用户评估记录
+  assessments Assessment[]
+
+  @@map("assessment_templates")
+}
+
+// 评估记录模型（用户完成的评估）
 model Assessment {
   id          String   @id @default(cuid())
+  templateId  String   // 关联评估工具模板
   type        String   // "comprehensive", "sdq", "embu"
   title       String
   description String?
   status      String   @default("in_progress") // "in_progress", "completed"
   score       Int?
   result      Json?    // 存储评估结果的JSON数据
+  answers     Json?    // 存储用户答案
   completedAt DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -80,10 +112,178 @@ model Assessment {
   userId  String
   childId String?
 
-  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  child Child? @relation(fields: [childId], references: [id], onDelete: SetNull)
+  user     User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  child    Child?             @relation(fields: [childId], references: [id], onDelete: SetNull)
+  template AssessmentTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
 
   @@map("assessments")
+}
+
+// 知识文章模型
+model Article {
+  id          String   @id @default(cuid())
+  title       String   // 文章标题
+  excerpt     String?  // 文章摘要
+  content     String   // 文章内容
+  author      String   // 作者
+  category    String   // 分类：life, psychology, safety, education
+  tags        Json?    // 标签数组
+  image       String?  // 封面图片
+  status      String   @default("draft") // draft, published
+  readTime    String?  // 阅读时长
+  views       Int      @default(0) // 浏览次数
+  rating      Float    @default(0) // 评分
+  publishedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // 关联的用户收藏和阅读历史
+  favorites   ArticleFavorite[]
+  readHistory ArticleReadHistory[]
+
+  @@map("articles")
+}
+
+// 文章收藏模型
+model ArticleFavorite {
+  id        String   @id @default(cuid())
+  userId    String
+  articleId String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, articleId])
+  @@map("article_favorites")
+}
+
+// 文章阅读历史模型
+model ArticleReadHistory {
+  id        String   @id @default(cuid())
+  userId    String
+  articleId String
+  readAt    DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, articleId])
+  @@map("article_read_history")
+}
+
+// 体验内容模型（游戏和教程）
+model Experience {
+  id               String   @id @default(cuid())
+  title            String   // 标题
+  description      String   // 描述
+  type             String   // game, tutorial
+  category         String   // daily-care, emotion, safety, etc.
+  difficulty       String   @default("beginner") // beginner, intermediate, advanced
+  duration         String   // 预计时长
+  targetAge        String?  // 目标年龄段
+  instructor       String?  // 讲师（教程用）
+  thumbnail        String?  // 缩略图
+  image            String?  // 封面图
+  tags             Json?    // 标签数组
+  content          Json?    // 内容数据（场景、章节等）
+  learningObjectives Json? // 学习目标
+  status           String   @default("draft") // draft, published
+  rating           Float    @default(0) // 评分
+  views            Int      @default(0) // 浏览次数
+  completions      Int      @default(0) // 完成次数
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // 关联的用户进度和评价
+  progress ExperienceProgress[]
+  reviews  ExperienceReview[]
+
+  @@map("experiences")
+}
+
+// 体验进度模型
+model ExperienceProgress {
+  id           String   @id @default(cuid())
+  userId       String
+  experienceId String
+  progress     Int      @default(0) // 进度百分比 0-100
+  score        Int?     // 得分
+  completedAt  DateTime?
+  lastAccessAt DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  experience Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, experienceId])
+  @@map("experience_progress")
+}
+
+// 体验评价模型
+model ExperienceReview {
+  id           String   @id @default(cuid())
+  userId       String
+  experienceId String
+  rating       Int      // 1-5星评分
+  comment      String?  // 评价内容
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  experience Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, experienceId])
+  @@map("experience_reviews")
+}
+
+// 专家模型
+model Expert {
+  id            String   @id @default(cuid())
+  name          String   // 专家姓名
+  specialty     String   // 专业领域
+  qualifications Json?   // 资质证书数组
+  experience    String   // 工作经验
+  avatar        String?  // 头像
+  bio           String?  // 个人简介
+  workingHours  String   @default("9:00-18:00") // 工作时间
+  status        String   @default("offline") // online, busy, offline
+  rating            Float    @default(0) // 评分
+  consultationCount Int      @default(0) // 咨询次数
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // 关联的咨询记录
+  consultations Consultation[]
+
+  @@map("experts")
+}
+
+// 咨询记录模型
+model Consultation {
+  id          String   @id @default(cuid())
+  userId      String   // 用户ID
+  expertId    String   // 专家ID
+  type        String   // online, appointment, email
+  topic       String   // 咨询主题
+  description String?  // 详细描述
+  category    String   // psychology, education, nutrition, etc.
+  priority    String   @default("medium") // low, medium, high
+  status      String   @default("pending") // pending, ongoing, completed, cancelled
+  duration    String?  // 咨询时长
+  notes       String?  // 备注
+  scheduledAt DateTime? // 预约时间
+  completedAt DateTime? // 完成时间
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expert Expert @relation(fields: [expertId], references: [id], onDelete: Cascade)
+
+  @@map("consultations")
 }
 
 // 成长记录模型
@@ -105,20 +305,7 @@ model GrowthRecord {
   @@map("growth_records")
 }
 
-// 文章模型
-model Article {
-  id          String   @id @default(cuid())
-  title       String
-  content     String
-  author      String
-  category    String   // "life", "psychology", "safety", "education"
-  coverImage  String?
-  publishedAt DateTime @default(now())
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
 
-  @@map("articles")
-}
 
 // 社区帖子模型
 model Post {

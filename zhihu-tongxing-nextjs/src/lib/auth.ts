@@ -6,7 +6,10 @@ import { findUserById, findUserByEmailAndPassword, createUser, isEmailExists } f
 
 export const SESSION_COOKIE_NAME = 'session'
 export const SESSION_DURATION = 7 * 24 * 60 * 60 * 1000 // 7 days in milliseconds
-const SESSION_SECRET = process.env.SESSION_SECRET || 'zhihu-tongxing-default-secret-key-change-in-production'
+const SESSION_SECRET = process.env.SESSION_SECRET
+if (!SESSION_SECRET) {
+  throw new Error('SESSION_SECRET environment variable is required')
+}
 const REFRESH_THRESHOLD = 24 * 60 * 60 * 1000 // 24 hours - refresh session if less than this time remaining
 
 
@@ -29,14 +32,14 @@ interface SessionData {
 // 加密会话数据
 function encryptSessionData(data: SessionData): string {
   const jsonString = JSON.stringify(data)
-  const encrypted = CryptoJS.AES.encrypt(jsonString, SESSION_SECRET).toString()
+  const encrypted = CryptoJS.AES.encrypt(jsonString, SESSION_SECRET!).toString()
   return encrypted
 }
 
 // 解密会话数据
 function decryptSessionData(encryptedData: string): SessionData | null {
   try {
-    const decrypted = CryptoJS.AES.decrypt(encryptedData, SESSION_SECRET)
+    const decrypted = CryptoJS.AES.decrypt(encryptedData, SESSION_SECRET!)
     const jsonString = decrypted.toString(CryptoJS.enc.Utf8)
 
     if (!jsonString) {
@@ -73,7 +76,7 @@ export function setSessionCookie(token: string) {
   const cookieStore = cookies()
   cookieStore.set(SESSION_COOKIE_NAME, token, {
     httpOnly: true,
-    secure: false, // 在HTTP环境下设置为false
+    secure: process.env.NODE_ENV === 'production', // 生产环境强制HTTPS
     sameSite: 'lax',
     maxAge: SESSION_DURATION / 1000,
     path: '/',
@@ -114,8 +117,8 @@ export async function getSession(): Promise<SessionUser | null> {
     return null
   }
 
-  // 查找用户
-  const user = findUserById(sessionData.userId)
+  // 查找用户 - 修复：添加 await 关键字
+  const user = await findUserById(sessionData.userId)
   if (!user) {
     return null
   }
@@ -177,7 +180,7 @@ export async function getSessionFromRequest(request: Request): Promise<SessionUs
   }
 
   // 查找用户
-  const user = findUserById(sessionData.userId)
+  const user = await findUserById(sessionData.userId)
   if (!user) {
     return null
   }
@@ -201,7 +204,7 @@ export async function deleteSession() {
 // 用户登录
 export async function login(email: string, password: string): Promise<SessionUser | null> {
   // 查找用户
-  const user = findUserByEmailAndPassword(email, password)
+  const user = await findUserByEmailAndPassword(email, password)
 
   if (!user) {
     return null
@@ -222,12 +225,12 @@ export async function login(email: string, password: string): Promise<SessionUse
 // 用户注册
 export async function register(email: string, password: string, name: string): Promise<SessionUser | null> {
   // 检查用户是否已存在
-  if (isEmailExists(email)) {
+  if (await isEmailExists(email)) {
     return null
   }
 
   // 创建新用户
-  const newUser = createUser({
+  const newUser = await createUser({
     email,
     password,
     name,

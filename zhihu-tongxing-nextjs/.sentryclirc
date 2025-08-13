@@ -1,0 +1,6 @@
+[defaults]
+org=thomas-7b
+project=zhihutongxing
+
+[auth]
+token=your-sentry-auth-token-here

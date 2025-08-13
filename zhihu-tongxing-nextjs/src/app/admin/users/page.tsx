@@ -35,53 +35,7 @@ interface User {
   articleCount: number
 }
 
-// Mock user data
-const mockUsers: User[] = [
-  {
-    id: '1',
-    name: '测试用户',
-    email: 'test@example.com',
-    role: 'user',
-    status: 'active',
-    registeredAt: '2024-01-15',
-    lastLogin: '2025-01-20',
-    assessmentCount: 5,
-    articleCount: 23
-  },
-  {
-    id: '2',
-    name: '管理员',
-    email: 'admin@zhihutongxing.com',
-    role: 'admin',
-    status: 'active',
-    registeredAt: '2024-01-01',
-    lastLogin: '2025-01-20',
-    assessmentCount: 0,
-    articleCount: 0
-  },
-  {
-    id: '3',
-    name: '张三',
-    email: 'zhangsan@example.com',
-    role: 'user',
-    status: 'active',
-    registeredAt: '2024-02-10',
-    lastLogin: '2025-01-19',
-    assessmentCount: 3,
-    articleCount: 12
-  },
-  {
-    id: '4',
-    name: '李四',
-    email: 'lisi@example.com',
-    role: 'user',
-    status: 'inactive',
-    registeredAt: '2024-03-05',
-    lastLogin: '2024-12-15',
-    assessmentCount: 1,
-    articleCount: 5
-  }
-]
+// 用户数据将从API动态获取
 
 // 重置密码相关的接口
 interface ResetPasswordResult {
@@ -97,10 +51,67 @@ interface ResetPasswordResult {
 
 export default function AdminUsersPage() {
   const { user: adminUser, loading: authLoading } = useAdminAuth()
-  const [users, setUsers] = useState<User[]>(mockUsers)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [filterRole, setFilterRole] = useState<'all' | 'user' | 'admin'>('all')
-  const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive' | 'banned'>('all')
+  const [users, setUsers] = useState<User[]>([])
+  const [isLoadingData, setIsLoadingData] = useState(true)
+  const [error, setError] = useState('')
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 0
+  })
+  const [searchQuery, setSearchQuery] = useState('')
+  const [filterRole, setFilterRole] = useState('all')
+  const [filterStatus, setFilterStatus] = useState('all')
+
+  // 从API获取用户列表
+  useEffect(() => {
+    if (adminUser) {
+      fetchUsers()
+    }
+  }, [adminUser, searchQuery, filterRole, filterStatus, pagination.page])
+
+  const fetchUsers = async () => {
+    try {
+      setIsLoadingData(true)
+      const params = new URLSearchParams({
+        page: pagination.page.toString(),
+        limit: pagination.limit.toString(),
+        ...(searchQuery && { search: searchQuery }),
+        ...(filterRole !== 'all' && { role: filterRole }),
+        ...(filterStatus !== 'all' && { status: filterStatus })
+      })
+
+      const response = await fetch(`/api/admin/users?${params}`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success) {
+          setUsers(data.data.users || [])
+          setPagination(prev => ({
+            ...prev,
+            total: data.data.pagination.total,
+            totalPages: data.data.pagination.totalPages
+          }))
+        } else {
+          setError(data.error || '获取用户列表失败')
+        }
+      } else {
+        setError('获取用户列表失败')
+      }
+    } catch (err) {
+      console.error('Error fetching users:', err)
+      setError('网络错误，请稍后重试')
+    } finally {
+      setIsLoadingData(false)
+    }
+  }
 
   // 重置密码相关状态
   const [showResetModal, setShowResetModal] = useState(false)
@@ -111,8 +122,8 @@ export default function AdminUsersPage() {
   const [copySuccess, setCopySuccess] = useState(false)
 
   const filteredUsers = users.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesSearch = user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         user.email.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesRole = filterRole === 'all' || user.role === filterRole
     const matchesStatus = filterStatus === 'all' || user.status === filterStatus
     
@@ -214,12 +225,31 @@ export default function AdminUsersPage() {
   }
 
   // Show loading state while checking authentication
-  if (authLoading) {
+  if (authLoading || isLoadingData) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">验证管理员权限中...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">加载中...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-600 mb-4">
+            <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.694-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <p className="text-red-600 font-medium mb-2">加载失败</p>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <Button onClick={() => fetchUsers()} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+            重新加载
+          </Button>
         </div>
       </div>
     )
@@ -252,8 +282,8 @@ export default function AdminUsersPage() {
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <Input
                     placeholder="搜索用户名或邮箱..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-10"
                   />
                 </div>

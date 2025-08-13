@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { Card } from '@/components/ui/card'
 import Button from '@/components/ui/button'
 import Input from "@/components/ui/Input"
-import { ArrowLeft, Save, Eye } from 'lucide-react'
+import { ArrowLeft, Save, Eye, Edit3 } from 'lucide-react'
 
 export default function NewAssessmentPage() {
   const router = useRouter()
@@ -31,6 +31,39 @@ export default function NewAssessmentPage() {
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsLoading(true)
+
+    try {
+      const response = await fetch('/api/admin/assessments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer mock-admin-token'
+        },
+        body: JSON.stringify({
+          ...formData,
+          questions: parseInt(formData.questions) || 0
+        })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        const newAssessmentId = data.id || '1' // 使用返回的ID或默认ID
+        
+        // 创建成功后跳转到题目编辑页面
+        router.push(`/admin/assessment/edit/${newAssessmentId}/questions`)
+      } else {
+        console.error('Failed to create assessment')
+      }
+    } catch (error) {
+      console.error('Error creating assessment:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleSaveAndReturn = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
 
@@ -80,12 +113,21 @@ export default function NewAssessmentPage() {
                 预览
               </Button>
               <Button 
+                onClick={handleSaveAndReturn} 
+                disabled={isLoading}
+                size="sm"
+                variant="outline"
+              >
+                <Save className="w-4 h-4 mr-2" />
+                {isLoading ? '保存中...' : '仅保存'}
+              </Button>
+              <Button 
                 onClick={handleSubmit} 
                 disabled={isLoading}
                 size="sm"
               >
-                <Save className="w-4 h-4 mr-2" />
-                {isLoading ? '保存中...' : '保存'}
+                <Edit3 className="w-4 h-4 mr-2" />
+                {isLoading ? '保存中...' : '保存并编辑题目'}
               </Button>
             </div>
           </div>

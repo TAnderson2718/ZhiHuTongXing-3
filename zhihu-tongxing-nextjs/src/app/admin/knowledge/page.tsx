@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import {
   BookOpen,
@@ -24,13 +24,50 @@ import { useAdminAuth } from '@/hooks/useAdminAuth'
 export default function KnowledgeManagementPage() {
   const { user: adminUser, loading } = useAdminAuth()
   const [activeTab, setActiveTab] = useState('articles')
+  const [stats, setStats] = useState([
+    { label: '知识文章', value: '0', icon: FileText, color: 'bg-blue-100 text-blue-600' },
+    { label: '视频资源', value: '0', icon: Video, color: 'bg-purple-100 text-purple-600' },
+    { label: '总浏览量', value: '0', icon: Eye, color: 'bg-green-100 text-green-600' },
+    { label: '活跃用户', value: '0', icon: Users, color: 'bg-orange-100 text-orange-600' }
+  ])
+  const [isLoadingStats, setIsLoadingStats] = useState(true)
+  const [statsError, setStatsError] = useState('')
 
-  const stats = [
-    { label: '知识文章', value: '156', icon: FileText, color: 'bg-blue-100 text-blue-600' },
-    { label: '视频资源', value: '89', icon: Video, color: 'bg-purple-100 text-purple-600' },
-    { label: '总浏览量', value: '45,230', icon: Eye, color: 'bg-green-100 text-green-600' },
-    { label: '活跃用户', value: '2,180', icon: Users, color: 'bg-orange-100 text-orange-600' }
-  ]
+  // 从API获取统计数据
+  useEffect(() => {
+    if (adminUser) {
+      fetchStats()
+    }
+  }, [adminUser])
+
+  const fetchStats = async () => {
+    try {
+      setIsLoadingStats(true)
+      const response = await fetch('/api/admin/knowledge/stats', {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success) {
+          setStats(data.data.stats)
+        } else {
+          setStatsError(data.error || '获取统计数据失败')
+        }
+      } else {
+        setStatsError('获取统计数据失败')
+      }
+    } catch (err) {
+      console.error('Error fetching knowledge stats:', err)
+      setStatsError('网络错误，请稍后重试')
+    } finally {
+      setIsLoadingStats(false)
+    }
+  }
 
   const quickActions = [
     {
@@ -70,12 +107,31 @@ export default function KnowledgeManagementPage() {
     { id: 'education', name: '教育指导', count: 31, color: 'bg-green-100 text-green-800' }
   ]
 
-  if (loading || !adminUser) {
+  if (loading || isLoadingStats) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">验证登录状态...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">加载中...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (statsError) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-600 mb-4">
+            <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.694-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <p className="text-red-600 font-medium mb-2">加载失败</p>
+          <p className="text-gray-600 mb-4">{statsError}</p>
+          <Button onClick={() => fetchStats()} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+            重新加载
+          </Button>
         </div>
       </div>
     )

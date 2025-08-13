@@ -13,7 +13,17 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
-    "db:seed": "tsx prisma/seed.ts"
+    "db:seed": "tsx prisma/seed.ts",
+    "debug:health": "node scripts/debug-automation.js health",
+    "debug:sentry": "node scripts/debug-automation.js sentry",
+    "debug:resources": "node scripts/debug-automation.js resources",
+    "debug:analyze": "node scripts/debug-automation.js analyze",
+    "debug:cleanup": "node scripts/debug-automation.js cleanup",
+    "debug:monitor": "node scripts/debug-automation.js monitor",
+    "sentry:test": "curl -X GET 'http://localhost:3000/api/sentry-test?type=error'",
+    "health:check": "curl -X GET 'http://localhost:3000/api/health'",
+    "pre-deploy": "node scripts/pre-deployment-check.js",
+    "deploy:check": "npm run pre-deploy && npm run build"
   },
   "dependencies": {
     "@prisma/client": "^5.7.1",
@@ -25,6 +35,7 @@
     "@radix-ui/react-select": "^2.2.5",
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-tabs": "^1.1.12",
+    "@sentry/nextjs": "^10.4.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/cookie": "^0.6.0",
     "@types/crypto-js": "^4.2.2",
@@ -58,5 +69,8 @@
     "tailwindcss": "^3.3.0",
     "tsx": "^4.6.2",
     "typescript": "^5"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-darwin-arm64": "^4.46.2"
   }
 }

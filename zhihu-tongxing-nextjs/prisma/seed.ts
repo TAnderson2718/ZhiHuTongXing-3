@@ -6,19 +6,37 @@ const prisma = new PrismaClient()
 async function main() {
   console.log('开始数据库种子数据填充...')
 
-  // 创建测试用户
-  const hashedPassword = await bcrypt.hash('123456', 10)
+  // 创建测试用户（使用安全的bcrypt哈希）
+  const testUserHashedPassword = await bcrypt.hash('123456', 12)
   
   const user = await prisma.user.upsert({
     where: { email: 'test@example.com' },
     update: {},
     create: {
       email: 'test@example.com',
-      password: hashedPassword,
-      name: '阳光妈妈',
-      avatar: 'https://picsum.photos/seed/myavatar/100/100',
+      password: testUserHashedPassword,
+      name: '测试用户',
+      avatar: null,
     },
   })
+
+  // 创建管理员用户（使用安全的bcrypt哈希）
+  const adminHashedPassword = await bcrypt.hash('Admin@2025!Secure#', 12)
+  
+  const adminUser = await prisma.user.upsert({
+    where: { email: 'admin@zhihutongxing.com' },
+    update: {},
+    create: {
+      email: 'admin@zhihutongxing.com',
+      password: adminHashedPassword,
+      name: '管理员',
+      avatar: null,
+    },
+  })
+
+  console.log('用户创建成功:')
+  console.log('- 测试用户:', user.email)
+  console.log('- 管理员:', adminUser.email)
 
   // 创建孩子信息
   const child1 = await prisma.child.upsert({
@@ -138,6 +156,37 @@ async function main() {
       childId: child1.id,
     },
   })
+
+  // 更新专家数据，添加专业领域
+  try {
+    await prisma.expert.updateMany({
+      where: { name: '李心理师' },
+      data: {
+        specialties: ['情绪管理', '行为引导', '亲子关系'],
+        title: '儿童心理学专家'
+      }
+    })
+
+    await prisma.expert.updateMany({
+      where: { name: '陈教育师' },
+      data: {
+        specialties: ['家庭沟通', '教育方法', '习惯培养'],
+        title: '家庭教育专家'
+      }
+    })
+
+    await prisma.expert.updateMany({
+      where: { name: '赵营养师' },
+      data: {
+        specialties: ['营养搭配', '健康饮食', '成长发育'],
+        title: '儿童营养专家'
+      }
+    })
+
+    console.log('专家数据更新完成！')
+  } catch (error) {
+    console.log('专家数据更新失败:', error)
+  }
 
   console.log('数据库种子数据填充完成！')
 }

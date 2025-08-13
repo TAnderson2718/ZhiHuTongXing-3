@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
                     'unknown'
 
     // 查找用户并验证密码
-    const user = findUserByEmailAndPassword(email, password)
+    const user = await findUserByEmailAndPassword(email, password)
 
     if (!user) {
       // 记录失败的登录尝试（用于安全审计）
@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
     // 在Route Handler中手动设置Cookie
     const cookieOptions = {
       httpOnly: true,
-      secure: false, // 强制设置为false用于HTTP
+      secure: process.env.NODE_ENV === 'production', // 生产环境强制HTTPS
       sameSite: 'lax' as const,
       maxAge: SESSION_DURATION / 1000,
       path: '/',

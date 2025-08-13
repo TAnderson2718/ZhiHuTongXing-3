@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
 
 // Mock experience content data
 const mockExperiences = [
@@ -125,45 +126,77 @@ export async function GET(request: NextRequest) {
     const difficulty = searchParams.get('difficulty') || ''
     const status = searchParams.get('status') || ''
 
-    let filteredExperiences = [...mockExperiences]
+    // 构建数据库查询条件
+    const where: any = {}
 
-    // Apply filters
     if (search) {
-      filteredExperiences = filteredExperiences.filter(experience =>
-        experience.title.toLowerCase().includes(search.toLowerCase()) ||
-        experience.description.toLowerCase().includes(search.toLowerCase()) ||
-        experience.tags.some(tag => tag.toLowerCase().includes(search.toLowerCase()))
-      )
+      where.OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } }
+      ]
     }
 
     if (type) {
-      filteredExperiences = filteredExperiences.filter(experience => experience.type === type)
+      where.type = type
     }
 
     if (category) {
-      filteredExperiences = filteredExperiences.filter(experience => experience.category === category)
+      where.category = category
     }
 
     if (difficulty) {
-      filteredExperiences = filteredExperiences.filter(experience => experience.difficulty === difficulty)
+      where.difficulty = difficulty
     }
 
-    if (status) {
-      filteredExperiences = filteredExperiences.filter(experience => experience.status === status)
+    if (status === 'active') {
+      where.status = 'published'
+    } else if (status === 'draft') {
+      where.status = 'draft'
     }
 
-    // Pagination
-    const startIndex = (page - 1) * limit
-    const endIndex = startIndex + limit
-    const paginatedExperiences = filteredExperiences.slice(startIndex, endIndex)
+    // 获取总数
+    const total = await prisma.experience.count({ where })
+
+    // 获取分页数据
+    const experiences = await prisma.experience.findMany({
+      where,
+      skip: (page - 1) * limit,
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        _count: {
+          select: {
+            progress: true
+          }
+        }
+      }
+    })
+
+    // 转换数据格式以匹配前端期望
+    const formattedExperiences = experiences.map(experience => ({
+      id: experience.id,
+      title: experience.title,
+      type: experience.type,
+      description: experience.description,
+      category: experience.category,
+      difficulty: experience.difficulty,
+      duration: experience.duration,
+      completions: experience.completions,
+      rating: experience.rating,
+      status: experience.status === 'published' ? 'active' : 'draft',
+      lastUpdated: experience.updatedAt.toISOString().split('T')[0],
+      tags: Array.isArray(experience.tags) ? experience.tags : [],
+      targetAge: experience.targetAge || '全年龄段',
+      learningObjectives: Array.isArray(experience.learningObjectives) ? experience.learningObjectives : []
+    }))
 
     return NextResponse.json({
-      experiences: paginatedExperiences,
+      experiences: formattedExperiences,
       pagination: {
         page,
         limit,
-        total: filteredExperiences.length,
-        totalPages: Math.ceil(filteredExperiences.length / limit)
+        total,
+        totalPages: Math.ceil(total / limit)
       }
     })
   } catch (error) {

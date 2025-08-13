@@ -2,6 +2,7 @@
 
 import React, { Component, ReactNode } from 'react'
 import { RefreshCw, AlertTriangle } from 'lucide-react'
+import * as Sentry from '@sentry/nextjs'
 
 interface Props {
   children: ReactNode
@@ -38,14 +39,36 @@ class ChunkErrorBoundary extends Component<Props, State> {
       errorInfo
     })
 
-    // 记录错误到监控系统
-    console.error('ChunkErrorBoundary caught an error:', error, errorInfo)
-    
+    // 记录错误到 Sentry
+    Sentry.withScope((scope) => {
+      scope.setTag('errorBoundary', 'ChunkErrorBoundary')
+      scope.setLevel('error')
+      scope.setContext('errorInfo', errorInfo)
+
+      // 添加用户操作上下文
+      scope.addBreadcrumb({
+        message: 'Error caught by ChunkErrorBoundary',
+        category: 'error',
+        level: 'error',
+        data: {
+          errorName: error.name,
+          errorMessage: error.message,
+        },
+      })
+
+      Sentry.captureException(error)
+    })
+
+    // 记录错误到控制台（开发环境）
+    if (process.env.NODE_ENV === 'development') {
+      console.error('ChunkErrorBoundary caught an error:', error, errorInfo)
+    }
+
     // 如果是ChunkLoadError，自动尝试刷新页面
-    if (error.name === 'ChunkLoadError' || 
+    if (error.name === 'ChunkLoadError' ||
         error.message.includes('Loading chunk') ||
         error.message.includes('Loading CSS chunk')) {
-      
+
       // 延迟刷新，给用户看到错误信息的时间
       setTimeout(() => {
         window.location.reload()

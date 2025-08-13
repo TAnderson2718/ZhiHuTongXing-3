@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, Play, Trophy, Clock, Users, Star } from 'lucide-react'
 import Button from '@/components/ui/button'
@@ -21,8 +21,45 @@ interface GameScenario {
 
 export default function ExperienceGamesPage() {
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('all')
+  const [gameScenarios, setGameScenarios] = useState<GameScenario[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState('')
 
-  const gameScenarios: GameScenario[] = [
+  // 从API获取体验数据
+  useEffect(() => {
+    fetchExperiences()
+  }, [])
+
+  const fetchExperiences = async () => {
+    try {
+      setIsLoading(true)
+      const response = await fetch('/api/experiences?type=game', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        if (result.success) {
+          setGameScenarios(result.data || [])
+        } else {
+          setError(result.error || '获取体验内容失败')
+        }
+      } else {
+        setError('获取体验内容失败')
+      }
+    } catch (err) {
+      console.error('Error fetching experiences:', err)
+      setError('网络错误，请稍后重试')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // 备用数据（如果API失败）
+  const fallbackGameScenarios: GameScenario[] = [
     {
       id: 'daily-care',
       title: '小小照护大任务',
@@ -97,9 +134,12 @@ export default function ExperienceGamesPage() {
     }
   ]
 
-  const filteredGames = selectedDifficulty === 'all' 
-    ? gameScenarios 
-    : gameScenarios.filter(game => game.difficulty === selectedDifficulty)
+  // 使用真实数据或备用数据
+  const currentGameScenarios = gameScenarios.length > 0 ? gameScenarios : fallbackGameScenarios
+
+  const filteredGames = selectedDifficulty === 'all'
+    ? currentGameScenarios
+    : currentGameScenarios.filter(game => game.difficulty === selectedDifficulty)
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
