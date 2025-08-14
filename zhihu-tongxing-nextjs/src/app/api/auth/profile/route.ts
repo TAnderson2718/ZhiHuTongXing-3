@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { z } from 'zod'
+import { prisma } from '@/lib/prisma'
 
 // 模拟用户数据存储
 const mockUsers = [
@@ -119,19 +120,33 @@ export async function PUT(request: NextRequest) {
 
     const { name, phone, bio, birthDate } = validationResult.data
 
-    // 更新用户信息
-    mockUsers[userIndex] = {
-      ...mockUsers[userIndex],
-      name,
-      phone: phone || mockUsers[userIndex].phone,
-      bio: bio || mockUsers[userIndex].bio,
-      birthDate: birthDate || mockUsers[userIndex].birthDate,
-    }
+    // 更新用户信息到数据库
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        ...(name && { name }),
+        ...(phone && { phone }),
+        ...(bio && { bio }),
+        ...(birthDate && { birthDate }),
+        updatedAt: new Date()
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        bio: true,
+        birthDate: true,
+        image: true,
+        createdAt: true,
+        updatedAt: true
+      }
+    })
 
-    // 返回更新后的用户信息（不包含密码）
-    const { password, ...updatedProfile } = mockUsers[userIndex]
-    
-    return NextResponse.json(updatedProfile)
+    return NextResponse.json({
+      success: true,
+      data: updatedUser
+    })
   } catch (error) {
     console.error('Profile update error:', error)
     return NextResponse.json(

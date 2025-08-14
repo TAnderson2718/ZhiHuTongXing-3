@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
         id: user.id,
         email: user.email,
         name: user.name,
-        avatar: user.avatar,
+        image: user.image,
         role: user.role,
       },
       message: '登录成功',
@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
     // 在Route Handler中手动设置Cookie
     const cookieOptions = {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // 生产环境强制HTTPS
+      secure: false, // 临时设置为false以支持HTTP
       sameSite: 'lax' as const,
       maxAge: SESSION_DURATION / 1000,
       path: '/',

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { prisma } from '@/lib/prisma'
 
 // Mock experience content data
 const mockExperiences = [
@@ -208,21 +209,25 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Verify admin authentication
-    if (!verifyAdminAuth(request)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const authResult = await verifyAdminAuth(request)
+    if (!authResult.success) {
+      return NextResponse.json(
+        { success: false, error: authResult.error },
+        { status: authResult.status }
+      )
     }
 
     const body = await request.json()
-    const { 
-      title, 
-      type, 
-      description, 
-      category, 
-      difficulty, 
-      duration, 
-      tags, 
-      targetAge, 
-      learningObjectives 
+    const {
+      title,
+      type,
+      description,
+      category,
+      difficulty,
+      duration,
+      tags,
+      targetAge,
+      learningObjectives
     } = body
 
     // Validate required fields
@@ -230,27 +235,50 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    // Create new experience
-    const newExperience = {
-      id: (mockExperiences.length + 1).toString(),
-      title,
-      type,
-      description,
-      category,
-      difficulty: difficulty || 'beginner',
-      duration: duration || '15-20分钟',
-      completions: 0,
-      rating: 0,
+    // 创建新的体验内容
+    const newExperience = await prisma.experience.create({
+      data: {
+        title,
+        type,
+        description,
+        category,
+        difficulty: difficulty || 'beginner',
+        duration: duration || '15-20分钟',
+        targetAge: targetAge || '全年龄段',
+        tags: tags || [],
+        learningObjectives: learningObjectives || [],
+        status: 'draft', // 新创建的默认为草稿状态
+        completions: 0,
+        rating: 0
+      },
+      include: {
+        _count: {
+          select: {
+            progress: true
+          }
+        }
+      }
+    })
+
+    // 转换数据格式以匹配前端期望
+    const experience = {
+      id: newExperience.id,
+      title: newExperience.title,
+      type: newExperience.type,
+      description: newExperience.description,
+      category: newExperience.category,
+      difficulty: newExperience.difficulty,
+      duration: newExperience.duration,
+      completions: newExperience.completions,
+      rating: newExperience.rating,
       status: 'draft',
-      lastUpdated: new Date().toISOString().split('T')[0],
-      tags: tags || [],
-      targetAge: targetAge || '全年龄段',
-      learningObjectives: learningObjectives || []
+      lastUpdated: newExperience.updatedAt.toISOString().split('T')[0],
+      tags: Array.isArray(newExperience.tags) ? newExperience.tags : [],
+      targetAge: newExperience.targetAge || '全年龄段',
+      learningObjectives: Array.isArray(newExperience.learningObjectives) ? newExperience.learningObjectives : []
     }
 
-    mockExperiences.push(newExperience)
-
-    return NextResponse.json({ experience: newExperience }, { status: 201 })
+    return NextResponse.json({ success: true, experience }, { status: 201 })
   } catch (error) {
     console.error('Error creating experience:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -260,30 +288,83 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     // Verify admin authentication
-    if (!verifyAdminAuth(request)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const authResult = await verifyAdminAuth(request)
+    if (!authResult.success) {
+      return NextResponse.json(
+        { success: false, error: authResult.error },
+        { status: authResult.status }
+      )
     }
 
     const body = await request.json()
-    const { id, ...updateData } = body
+    const { id, title, type, description, category, difficulty, duration, tags, targetAge, learningObjectives, status } = body
 
     if (!id) {
       return NextResponse.json({ error: 'Experience ID is required' }, { status: 400 })
     }
 
-    const experienceIndex = mockExperiences.findIndex(experience => experience.id === id)
-    if (experienceIndex === -1) {
+    // 检查体验内容是否存在
+    const existingExperience = await prisma.experience.findUnique({
+      where: { id }
+    })
+
+    if (!existingExperience) {
       return NextResponse.json({ error: 'Experience not found' }, { status: 404 })
     }
 
-    // Update experience
-    mockExperiences[experienceIndex] = {
-      ...mockExperiences[experienceIndex],
-      ...updateData,
-      lastUpdated: new Date().toISOString().split('T')[0]
+    // 准备更新数据
+    const updateData: any = {}
+
+    if (title !== undefined) updateData.title = title
+    if (type !== undefined) updateData.type = type
+    if (description !== undefined) updateData.description = description
+    if (category !== undefined) updateData.category = category
+    if (difficulty !== undefined) updateData.difficulty = difficulty
+    if (duration !== undefined) updateData.duration = duration
+    if (targetAge !== undefined) updateData.targetAge = targetAge
+    if (tags !== undefined) updateData.tags = tags
+    if (learningObjectives !== undefined) updateData.learningObjectives = learningObjectives
+
+    // 处理状态更新
+    if (status !== undefined) {
+      updateData.status = status === 'active' ? 'published' : 'draft'
     }
 
-    return NextResponse.json({ experience: mockExperiences[experienceIndex] })
+    // 更新体验内容
+    const updatedExperience = await prisma.experience.update({
+      where: { id },
+      data: {
+        ...updateData,
+        updatedAt: new Date()
+      },
+      include: {
+        _count: {
+          select: {
+            progress: true
+          }
+        }
+      }
+    })
+
+    // 转换数据格式以匹配前端期望
+    const experience = {
+      id: updatedExperience.id,
+      title: updatedExperience.title,
+      type: updatedExperience.type,
+      description: updatedExperience.description,
+      category: updatedExperience.category,
+      difficulty: updatedExperience.difficulty,
+      duration: updatedExperience.duration,
+      completions: updatedExperience.completions,
+      rating: updatedExperience.rating,
+      status: updatedExperience.status === 'published' ? 'active' : 'draft',
+      lastUpdated: updatedExperience.updatedAt.toISOString().split('T')[0],
+      tags: Array.isArray(updatedExperience.tags) ? updatedExperience.tags : [],
+      targetAge: updatedExperience.targetAge || '全年龄段',
+      learningObjectives: Array.isArray(updatedExperience.learningObjectives) ? updatedExperience.learningObjectives : []
+    }
+
+    return NextResponse.json({ success: true, experience })
   } catch (error) {
     console.error('Error updating experience:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -293,8 +374,12 @@ export async function PUT(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     // Verify admin authentication
-    if (!verifyAdminAuth(request)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const authResult = await verifyAdminAuth(request)
+    if (!authResult.success) {
+      return NextResponse.json(
+        { success: false, error: authResult.error },
+        { status: authResult.status }
+      )
     }
 
     const { searchParams } = new URL(request.url)
@@ -304,15 +389,28 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Experience ID is required' }, { status: 400 })
     }
 
-    const experienceIndex = mockExperiences.findIndex(experience => experience.id === id)
-    if (experienceIndex === -1) {
+    // 检查体验内容是否存在
+    const existingExperience = await prisma.experience.findUnique({
+      where: { id }
+    })
+
+    if (!existingExperience) {
       return NextResponse.json({ error: 'Experience not found' }, { status: 404 })
     }
 
-    // Remove experience
-    const deletedExperience = mockExperiences.splice(experienceIndex, 1)[0]
+    // 删除体验内容
+    await prisma.experience.delete({
+      where: { id }
+    })
 
-    return NextResponse.json({ message: 'Experience deleted successfully', experience: deletedExperience })
+    return NextResponse.json({
+      success: true,
+      message: 'Experience deleted successfully',
+      experience: {
+        id: existingExperience.id,
+        title: existingExperience.title
+      }
+    })
   } catch (error) {
     console.error('Error deleting experience:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

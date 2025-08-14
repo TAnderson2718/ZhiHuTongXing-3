@@ -10,8 +10,8 @@ WORKDIR /app
 COPY package*.json ./
 COPY . .
 
-# 安装依赖
-RUN npm install --production=false
+# 安装依赖（跳过可选依赖以避免Sentry CLI网络问题）
+RUN npm install --production=false --omit=optional
 # 安装 sharp 用于生产环境图片优化
 RUN npm install sharp
 # 修复rollup可选依赖问题 - 安装所有架构的rollup依赖

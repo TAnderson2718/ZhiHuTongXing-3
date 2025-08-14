@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { loadArticles } from '@/lib/articleStorage'
+import { prisma } from '@/lib/prisma'
 
 const articlesQuerySchema = z.object({
   category: z.string().optional(),
@@ -19,39 +19,65 @@ export async function GET(request: NextRequest) {
       search: searchParams.get('search') || undefined,
     })
 
-    // 从文件系统加载文章
-    let articles = loadArticles()
-    
-    // 只返回已发布的文章
-    articles = articles.filter(article => article.status === 'published')
-    
-    // 应用筛选条件
+    // 构建查询条件
+    const where: any = {
+      status: 'published' // 只返回已发布的文章
+    }
+
     if (query.category) {
-      articles = articles.filter(article => article.category === query.category)
+      where.category = query.category
     }
-    
+
     if (query.search) {
-      const searchLower = query.search.toLowerCase()
-      articles = articles.filter(article =>
-        article.title.toLowerCase().includes(searchLower) ||
-        (article.excerpt && article.excerpt.toLowerCase().includes(searchLower)) ||
-        (article.content && article.content.toLowerCase().includes(searchLower))
-      )
+      where.OR = [
+        { title: { contains: query.search, mode: 'insensitive' } },
+        { excerpt: { contains: query.search, mode: 'insensitive' } },
+        { content: { contains: query.search, mode: 'insensitive' } }
+      ]
     }
 
-    // 按发布时间排序
-    articles.sort((a, b) => new Date(b.publishedAt || b.createdAt).getTime() - new Date(a.publishedAt || a.createdAt).getTime())
+    // 获取文章总数
+    const total = await prisma.article.count({ where })
 
-    // 分页
-    const total = articles.length
-    const skip = (query.page - 1) * query.limit
-    const paginatedArticles = articles.slice(skip, skip + query.limit)
+    // 获取分页文章
+    const articles = await prisma.article.findMany({
+      where,
+      skip: (query.page - 1) * query.limit,
+      take: query.limit,
+      orderBy: [
+        { publishedAt: 'desc' },
+        { createdAt: 'desc' }
+      ],
+      select: {
+        id: true,
+        title: true,
+        excerpt: true,
+        author: true,
+        category: true,
+        tags: true,
+        image: true,
+        readTime: true,
+        views: true,
+        rating: true,
+        publishedAt: true,
+        createdAt: true
+      }
+    })
 
-    // 处理文章内容，只返回摘要
-    const articlesWithExcerpt = paginatedArticles.map(article => ({
-      ...article,
-      excerpt: article.excerpt || (article.content ? article.content.replace(/<[^>]*>/g, '').substring(0, 200) + '...' : ''),
-      content: undefined, // 列表页不返回完整内容
+    // 转换数据格式以匹配前端期望
+    const articlesWithExcerpt = articles.map(article => ({
+      id: article.id,
+      title: article.title,
+      excerpt: article.excerpt || '',
+      author: article.author,
+      category: article.category,
+      tags: Array.isArray(article.tags) ? article.tags : [],
+      image: article.image,
+      readTime: article.readTime,
+      views: article.views.toString(),
+      rating: article.rating.toString(),
+      publishedAt: article.publishedAt?.toISOString().split('T')[0] || '',
+      createdAt: article.createdAt.toISOString()
     }))
 
     return NextResponse.json({

@@ -20,9 +20,9 @@ import {
   getPasswordStrengthColor,
   getPasswordStrengthText,
   generatePasswordSuggestions,
-  isPasswordCompromised
+  isPasswordCompromised,
+  PasswordRequirement
 } from '@/lib/password-validation'
-
 export default function ChangePasswordPage() {
   const router = useRouter()
   const [adminUser, setAdminUser] = useState<any>(null)
@@ -39,10 +39,16 @@ export default function ChangePasswordPage() {
     confirmPassword: ''
   })
 
-  const [passwordValidation, setPasswordValidation] = useState({
-    requirements: [],
+  const [passwordValidation, setPasswordValidation] = useState<{
+    requirements: PasswordRequirement[];
+    strength: number;
+    level: 'weak' | 'medium' | 'strong' | 'very-strong';
+    isValid: boolean;
+    score: number;
+  }>({
+    requirements: [] as PasswordRequirement[],
     strength: 0,
-    level: 'weak' as const,
+    level: 'weak',
     isValid: false,
     score: 0
   })
@@ -75,7 +81,7 @@ export default function ChangePasswordPage() {
       const validation = validatePasswordStrength(formData.newPassword)
       setPasswordValidation(validation)
     } else {
-      setPasswordValidation({ requirements: [], strength: 0, level: 'weak', isValid: false, score: 0 })
+      setPasswordValidation({ requirements: [] as PasswordRequirement[], strength: 0, level: 'weak', isValid: false, score: 0 })
     }
   }, [formData.newPassword])
 

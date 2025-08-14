@@ -307,25 +307,71 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { id, ...updateData } = body
+    const { id, name, type, description, ageRange, questions, category, difficulty, estimatedTime, status } = body
 
     if (!id) {
       return NextResponse.json({ error: 'Assessment ID is required' }, { status: 400 })
     }
 
-    const assessmentIndex = mockAssessments.findIndex(assessment => assessment.id === id)
-    if (assessmentIndex === -1) {
+    // 检查评估工具是否存在
+    const existingTemplate = await prisma.assessmentTemplate.findUnique({
+      where: { id }
+    })
+
+    if (!existingTemplate) {
       return NextResponse.json({ error: 'Assessment not found' }, { status: 404 })
     }
 
-    // Update assessment
-    mockAssessments[assessmentIndex] = {
-      ...mockAssessments[assessmentIndex],
-      ...updateData,
-      lastUpdated: new Date().toISOString().split('T')[0]
+    // 准备更新数据
+    const updateData: any = {}
+
+    if (name !== undefined) updateData.name = name
+    if (type !== undefined) updateData.type = type
+    if (description !== undefined) updateData.description = description
+    if (ageRange !== undefined) updateData.ageRange = ageRange
+    if (category !== undefined) updateData.category = category
+    if (difficulty !== undefined) updateData.difficulty = difficulty
+    if (estimatedTime !== undefined) updateData.duration = estimatedTime
+    if (questions !== undefined) updateData.questions = questions ? { count: questions } : null
+
+    // 处理状态更新
+    if (status !== undefined) {
+      updateData.isActive = status === 'active'
     }
 
-    return NextResponse.json({ assessment: mockAssessments[assessmentIndex] })
+    // 更新评估工具模板
+    const updatedTemplate = await prisma.assessmentTemplate.update({
+      where: { id },
+      data: {
+        ...updateData,
+        updatedAt: new Date()
+      },
+      include: {
+        _count: {
+          select: {
+            assessments: true
+          }
+        }
+      }
+    })
+
+    // 转换数据格式以匹配前端期望
+    const assessment = {
+      id: updatedTemplate.id,
+      name: updatedTemplate.name,
+      type: updatedTemplate.type,
+      description: updatedTemplate.description,
+      ageRange: updatedTemplate.ageRange,
+      questions: questions || 0,
+      completions: updatedTemplate._count.assessments,
+      status: updatedTemplate.isActive ? 'active' : 'draft',
+      lastUpdated: updatedTemplate.updatedAt.toISOString().split('T')[0],
+      category: updatedTemplate.category,
+      difficulty: updatedTemplate.difficulty,
+      estimatedTime: updatedTemplate.duration
+    }
+
+    return NextResponse.json({ success: true, assessment })
   } catch (error) {
     console.error('Error updating assessment:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

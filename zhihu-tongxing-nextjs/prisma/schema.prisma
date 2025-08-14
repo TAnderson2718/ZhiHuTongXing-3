@@ -12,13 +12,15 @@ datasource db {
 
 // 用户模型
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  name      String
-  avatar    String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String?
+  name          String?
+  image         String?
+  emailVerified DateTime?
+  role          String    @default("USER")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   // 关联关系
   children           Child[]
@@ -192,7 +194,6 @@ model Experience {
   rating           Float    @default(0) // 评分
   views            Int      @default(0) // 浏览次数
   completions      Int      @default(0) // 完成次数
-  isActive         Boolean  @default(true)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
@@ -376,4 +377,31 @@ model CourseProgress {
 
   @@unique([userId, courseId])
   @@map("course_progress")
+}
+
+// 视频模型
+model Video {
+  id            String   @id @default(cuid())
+  title         String
+  description   String?
+  filename      String
+  originalName  String?
+  url           String
+  thumbnailUrl  String?
+  size          Int      @default(0)
+  duration      Int      @default(0) // 秒
+  format        String   @default("mp4")
+  resolution    String?
+  bitrate       String?
+  category      String   @default("education")
+  tags          Json?    // 标签数组
+  visibility    String   @default("public") // public, private
+  status        String   @default("active") // active, inactive
+  views         Int      @default(0)
+  usageCount    Int      @default(0)
+  uploadedBy    String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("videos")
 }

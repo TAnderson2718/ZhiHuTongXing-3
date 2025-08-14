@@ -10,17 +10,14 @@ import {
   Users,
   Settings,
   LogOut,
-  Plus,
   Edit,
   Trash2,
   Eye,
-  BarChart3,
   ClipboardList,
   BookOpen,
   Gamepad2,
   HeadphonesIcon,
   GraduationCap,
-  AlertTriangle,
   Key,
   Activity
 } from 'lucide-react'

@@ -85,32 +85,48 @@ export default function EditAssessmentPage() {
     // 只有在用户认证完成后才获取评估数据
     if (adminUser) {
       // Load assessment data
-      const loadAssessmentData = () => {
+      const loadAssessmentData = async () => {
         setIsLoadingData(true)
-      
-      // Simulate API call delay
-      setTimeout(() => {
-        const assessment = mockAssessments[assessmentId as keyof typeof mockAssessments]
-        
-        if (assessment) {
-          setFormData({
-            name: assessment.name,
-            type: assessment.type,
-            description: assessment.description,
-            ageRange: assessment.ageRange,
-            questions: assessment.questions,
-            category: assessment.category,
-            difficulty: assessment.difficulty,
-            estimatedTime: assessment.estimatedTime,
-            status: assessment.status
+
+        try {
+          const response = await fetch(`/api/admin/assessments?limit=100`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+              'Content-Type': 'application/json'
+            }
           })
+
+          if (response.ok) {
+            const data = await response.json()
+            const assessment = data.assessments?.find((a: any) => a.id === assessmentId)
+
+            if (assessment) {
+              setFormData({
+                name: assessment.name,
+                type: assessment.type,
+                description: assessment.description,
+                ageRange: assessment.ageRange,
+                questions: assessment.questions,
+                category: assessment.category,
+                difficulty: assessment.difficulty,
+                estimatedTime: assessment.estimatedTime,
+                status: assessment.status
+              })
+            } else {
+              console.error('Assessment not found')
+            }
+          } else {
+            console.error('Failed to fetch assessment data')
+          }
+        } catch (error) {
+          console.error('Error loading assessment data:', error)
+        } finally {
+          setIsLoadingData(false)
         }
+      }
 
-        setIsLoadingData(false)
-      }, 500)
-    }
-
-    loadAssessmentData()
+      loadAssessmentData()
     }
   }, [adminUser, assessmentId])
 
@@ -127,16 +143,31 @@ export default function EditAssessmentPage() {
     setIsLoading(true)
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      // In real app, this would be an API call to update the assessment
-      console.log('Updating assessment:', { id: assessmentId, ...formData })
-      
-      // Redirect back to assessment list
-      router.push('/admin/assessment')
+      const response = await fetch('/api/admin/assessments', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          id: assessmentId,
+          ...formData
+        })
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        console.log('Assessment updated successfully:', result)
+        // Redirect back to assessment list
+        router.push('/admin/assessment')
+      } else {
+        const error = await response.json()
+        console.error('Error updating assessment:', error)
+        alert(error.error || '更新失败，请重试')
+      }
     } catch (error) {
       console.error('Error updating assessment:', error)
+      alert('网络错误，请重试')
     } finally {
       setIsLoading(false)
     }

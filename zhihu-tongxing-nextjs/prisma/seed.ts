@@ -162,24 +162,24 @@ async function main() {
     await prisma.expert.updateMany({
       where: { name: '李心理师' },
       data: {
-        specialties: ['情绪管理', '行为引导', '亲子关系'],
-        title: '儿童心理学专家'
+        specialty: '情绪管理',
+        bio: '儿童心理学专家，专注于情绪管理和行为引导'
       }
     })
 
     await prisma.expert.updateMany({
       where: { name: '陈教育师' },
       data: {
-        specialties: ['家庭沟通', '教育方法', '习惯培养'],
-        title: '家庭教育专家'
+        specialty: '家庭教育',
+        bio: '家庭教育专家，专注于家庭沟通和教育方法'
       }
     })
 
     await prisma.expert.updateMany({
       where: { name: '赵营养师' },
       data: {
-        specialties: ['营养搭配', '健康饮食', '成长发育'],
-        title: '儿童营养专家'
+        specialty: '儿童营养',
+        bio: '儿童营养专家，专注于营养搭配和健康饮食'
       }
     })
 

@@ -11,7 +11,7 @@ export interface User {
   email: string
   password: string // 存储哈希后的密码
   name: string
-  avatar: string | null
+  image: string | null
   role?: 'user' | 'admin'
   phone?: string | undefined
   bio?: string | undefined
@@ -78,17 +78,17 @@ export async function findUserByEmailAndPassword(email: string, password: string
 // 创建新用户（密码自动哈希）
 export async function createUser(userData: Omit<User, 'id' | 'createdAt' | 'password'> & { password: string }): Promise<User> {
   const hashedPassword = await bcrypt.hash(userData.password, 12)
-  
+
   const newUser = await prisma.user.create({
     data: {
       email: userData.email,
       password: hashedPassword,
       name: userData.name,
-      avatar: userData.avatar
+      image: userData.image
       // 注意：phone, bio, birthDate 等字段在当前 schema 中不存在
     }
   })
-  
+
   return {
     ...newUser,
     role: userData.email === 'admin@zhihutongxing.com' ? 'admin' : 'user',
@@ -107,11 +107,11 @@ export async function updateUser(id: string, updates: Partial<Omit<User, 'id'>>)
         ...(updates.email && { email: updates.email }),
         ...(updates.password && { password: updates.password }),
         ...(updates.name && { name: updates.name }),
-        ...(updates.avatar !== undefined && { avatar: updates.avatar })
+        ...(updates.image !== undefined && { image: updates.image })
         // 注意：phone, bio, birthDate 等字段在当前 schema 中不存在
       }
     })
-    
+
     return {
       ...updatedUser,
       role: updatedUser.email === 'admin@zhihutongxing.com' ? 'admin' : 'user',

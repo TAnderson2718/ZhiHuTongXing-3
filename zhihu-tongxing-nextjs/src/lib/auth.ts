@@ -139,7 +139,7 @@ export async function getSession(): Promise<SessionUser | null> {
     id: user.id,
     email: user.email,
     name: user.name,
-    avatar: user.avatar,
+    image: user.image,
     role: user.role,
   }
 }
@@ -189,7 +189,7 @@ export async function getSessionFromRequest(request: Request): Promise<SessionUs
     id: user.id,
     email: user.email,
     name: user.name,
-    avatar: user.avatar,
+    image: user.image,
     role: user.role,
   }
 }
@@ -217,7 +217,7 @@ export async function login(email: string, password: string): Promise<SessionUse
     id: user.id,
     email: user.email,
     name: user.name,
-    avatar: user.avatar,
+    image: user.image,
     role: user.role,
   }
 }
@@ -234,7 +234,7 @@ export async function register(email: string, password: string, name: string): P
     email,
     password,
     name,
-    avatar: null,
+    image: null,
     role: 'user',
   })
 
@@ -245,7 +245,7 @@ export async function register(email: string, password: string, name: string): P
     id: newUser.id,
     email: newUser.email,
     name: newUser.name,
-    avatar: newUser.avatar,
+    image: newUser.image,
     role: newUser.role,
   }
 }
