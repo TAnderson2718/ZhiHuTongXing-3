@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSessionFromRequest } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
+import { loadArticles, createArticle, updateArticle, deleteArticle } from '@/lib/articleStorage'
 
 // 验证管理员权限
 async function verifyAdminAuth(request: NextRequest) {
@@ -32,63 +32,49 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status')
     const search = searchParams.get('search')
 
-    // 构建查询条件
-    const where: any = {}
+    // 从文件存储获取所有文章
+    let articles = loadArticles()
 
+    // 应用筛选条件
     if (search) {
-      where.OR = [
-        { title: { contains: search, mode: 'insensitive' } },
-        { excerpt: { contains: search, mode: 'insensitive' } }
-      ]
+      const searchLower = search.toLowerCase()
+      articles = articles.filter(article =>
+        article.title.toLowerCase().includes(searchLower) ||
+        article.excerpt.toLowerCase().includes(searchLower)
+      )
     }
 
     if (category) {
-      where.category = category
+      articles = articles.filter(article => article.category === category)
     }
 
     if (status) {
-      where.status = status
+      articles = articles.filter(article => article.status === status)
     }
 
-    // 获取文章总数
-    const total = await prisma.article.count({ where })
+    // 按创建时间倒序排序
+    articles.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 
-    // 获取分页文章
-    const articles = await prisma.article.findMany({
-      where,
-      skip: (page - 1) * limit,
-      take: limit,
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        title: true,
-        excerpt: true,
-        author: true,
-        category: true,
-        status: true,
-        views: true,
-        rating: true,
-        publishedAt: true,
-        createdAt: true,
-        updatedAt: true,
-        tags: true,
-        image: true
-      }
-    })
+    // 计算分页
+    const total = articles.length
+    const startIndex = (page - 1) * limit
+    const endIndex = startIndex + limit
+    const paginatedArticles = articles.slice(startIndex, endIndex)
 
     // 转换数据格式以匹配前端期望
-    const formattedArticles = articles.map(article => ({
+    const formattedArticles = paginatedArticles.map(article => ({
       id: article.id,
       title: article.title,
       excerpt: article.excerpt,
       author: article.author,
       category: article.category,
       status: article.status,
-      views: article.views.toString(),
-      rating: article.rating.toString(),
-      publishedAt: article.publishedAt?.toISOString().split('T')[0] || '',
-      createdAt: article.createdAt.toISOString(),
-      updatedAt: article.updatedAt.toISOString(),
+      views: article.views?.toString() || '0',
+      rating: article.rating?.toString() || '0',
+      publishedAt: article.publishedAt || '',
+      readTime: article.readTime || '1分钟',
+      createdAt: article.createdAt,
+      updatedAt: article.updatedAt,
       tags: Array.isArray(article.tags) ? article.tags : [],
       image: article.image
     }))
@@ -148,23 +134,23 @@ export async function POST(request: NextRequest) {
     // 处理标签数据
     const processedTags = Array.isArray(tags) ? tags : (tags ? tags.split(',').map((t: string) => t.trim()) : [])
 
-    // 创建新文章到数据库
-    const newArticle = await prisma.article.create({
-      data: {
-        title,
-        excerpt: excerpt || '',
-        content,
-        category,
-        tags: processedTags,
-        image: image || `https://picsum.photos/seed/${Date.now()}/800/400`,
-        status,
-        author: '系统管理员',
-        publishedAt: status === 'published' ? new Date() : null,
-        readTime: Math.ceil(content.length / 500) + '分钟',
-        views: 0,
-        rating: 0
-      }
-    })
+    // 使用文件存储创建文章
+    const articleData = {
+      title,
+      excerpt: excerpt || '',
+      content,
+      category,
+      tags: processedTags,
+      image: image || `https://picsum.photos/seed/${Date.now()}/800/400`,
+      status,
+      author: '系统管理员',
+      publishedAt: status === 'published' ? new Date().toISOString().split('T')[0] : null,
+      readTime: Math.ceil(content.length / 500) + '分钟',
+      views: 0,
+      rating: 0
+    }
+
+    const newArticle = createArticle(articleData)
 
     console.log('Article created and saved:', newArticle.title)
 
@@ -179,12 +165,12 @@ export async function POST(request: NextRequest) {
       image: newArticle.image,
       status: newArticle.status,
       author: newArticle.author,
-      publishedAt: newArticle.publishedAt?.toISOString().split('T')[0] || '',
+      publishedAt: newArticle.publishedAt || '',
       readTime: newArticle.readTime,
-      views: newArticle.views.toString(),
-      rating: newArticle.rating.toString(),
-      createdAt: newArticle.createdAt.toISOString(),
-      updatedAt: newArticle.updatedAt.toISOString()
+      views: newArticle.views?.toString() || '0',
+      rating: newArticle.rating?.toString() || '0',
+      createdAt: newArticle.createdAt,
+      updatedAt: newArticle.updatedAt
     }
 
     return NextResponse.json({
@@ -223,38 +209,37 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    // 检查文章是否存在
-    const existingArticle = await prisma.article.findUnique({
-      where: { id }
-    })
-
-    if (!existingArticle) {
-      return NextResponse.json(
-        { success: false, error: '文章不存在' },
-        { status: 404 }
-      )
-    }
-
     // 处理标签数据
     const processedTags = updateData.tags ?
       (Array.isArray(updateData.tags) ? updateData.tags : updateData.tags.split(',').map((t: string) => t.trim()))
       : undefined
 
-    // 更新文章
-    const updatedArticle = await prisma.article.update({
-      where: { id },
-      data: {
-        ...(updateData.title && { title: updateData.title }),
-        ...(updateData.excerpt !== undefined && { excerpt: updateData.excerpt }),
-        ...(updateData.content && { content: updateData.content }),
-        ...(updateData.category && { category: updateData.category }),
-        ...(processedTags && { tags: processedTags }),
-        ...(updateData.image !== undefined && { image: updateData.image }),
-        ...(updateData.status && { status: updateData.status }),
-        ...(updateData.status === 'published' && !existingArticle.publishedAt && { publishedAt: new Date() }),
-        updatedAt: new Date()
+    // 准备更新数据
+    const updatePayload: any = {}
+    if (updateData.title) updatePayload.title = updateData.title
+    if (updateData.excerpt !== undefined) updatePayload.excerpt = updateData.excerpt
+    if (updateData.content) updatePayload.content = updateData.content
+    if (updateData.category) updatePayload.category = updateData.category
+    if (processedTags) updatePayload.tags = processedTags
+    if (updateData.image !== undefined) updatePayload.image = updateData.image
+    if (updateData.status) {
+      updatePayload.status = updateData.status
+      if (updateData.status === 'published') {
+        updatePayload.publishedAt = new Date().toISOString().split('T')[0]
+      } else if (updateData.status === 'draft') {
+        updatePayload.publishedAt = null
       }
-    })
+    }
+
+    // 使用文件存储更新文章
+    const updatedArticle = updateArticle(id, updatePayload)
+
+    if (!updatedArticle) {
+      return NextResponse.json(
+        { success: false, error: '文章不存在' },
+        { status: 404 }
+      )
+    }
 
     // 转换数据格式以匹配前端期望
     const formattedArticle = {
@@ -267,12 +252,12 @@ export async function PUT(request: NextRequest) {
       image: updatedArticle.image,
       status: updatedArticle.status,
       author: updatedArticle.author,
-      publishedAt: updatedArticle.publishedAt?.toISOString().split('T')[0] || '',
+      publishedAt: updatedArticle.publishedAt || '',
       readTime: updatedArticle.readTime,
-      views: updatedArticle.views.toString(),
-      rating: updatedArticle.rating.toString(),
-      createdAt: updatedArticle.createdAt.toISOString(),
-      updatedAt: updatedArticle.updatedAt.toISOString()
+      views: updatedArticle.views?.toString() || '0',
+      rating: updatedArticle.rating?.toString() || '0',
+      createdAt: updatedArticle.createdAt,
+      updatedAt: updatedArticle.updatedAt
     }
 
     return NextResponse.json({
@@ -311,22 +296,15 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    // 检查文章是否存在
-    const existingArticle = await prisma.article.findUnique({
-      where: { id }
-    })
+    // 使用文件存储删除文章
+    const success = deleteArticle(id)
 
-    if (!existingArticle) {
+    if (!success) {
       return NextResponse.json(
         { success: false, error: '文章不存在' },
         { status: 404 }
       )
     }
-
-    // 删除文章
-    await prisma.article.delete({
-      where: { id }
-    })
 
     return NextResponse.json({
       success: true,
