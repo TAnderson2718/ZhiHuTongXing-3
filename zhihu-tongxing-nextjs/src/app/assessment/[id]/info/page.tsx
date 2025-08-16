@@ -1,11 +1,12 @@
 'use client'
 
 import { useParams, useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Button from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { ArrowLeft, Clock, Users, Brain, Heart, Shield, BookOpen, CheckCircle, AlertCircle, Info } from 'lucide-react'
+import { ArrowLeft, Clock, Users, Brain, Heart, Shield, BookOpen, CheckCircle, AlertCircle, Info, ClipboardList } from 'lucide-react'
 
 const assessmentInfo = {
   comprehensive: {
@@ -134,15 +135,127 @@ const assessmentInfo = {
   }
 }
 
+// 定义评估工具信息的类型
+interface AssessmentInfo {
+  id: string
+  title: string
+  subtitle?: string
+  description: string
+  duration: string
+  questions: number
+  icon: any
+  color: string
+  dimensions?: Array<{
+    name: string
+    description: string
+    icon: any
+  }>
+  benefits?: string[]
+  tips?: string[]
+  ageRange?: string
+  category?: string
+}
+
 export default function AssessmentInfoPage() {
   const params = useParams()
   const router = useRouter()
   const assessmentId = params.id as string
-  
-  const info = assessmentInfo[assessmentId as keyof typeof assessmentInfo]
 
-  if (!info) {
-    return <div>评估不存在</div>
+  const [info, setInfo] = useState<AssessmentInfo | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // 首先检查是否是硬编码的评估类型
+  const hardcodedInfo = assessmentInfo[assessmentId as keyof typeof assessmentInfo]
+
+  useEffect(() => {
+    const fetchAssessmentInfo = async () => {
+      try {
+        setLoading(true)
+
+        // 如果是硬编码的评估类型，直接使用
+        if (hardcodedInfo) {
+          setInfo(hardcodedInfo)
+          setLoading(false)
+          return
+        }
+
+        // 否则从API获取评估工具信息
+        const response = await fetch(`/api/assessment-templates/${assessmentId}`)
+
+        if (!response.ok) {
+          throw new Error('获取评估工具信息失败')
+        }
+
+        const data = await response.json()
+
+        if (data.success && data.data) {
+          const template = data.data
+          // 转换为前端需要的格式
+          const assessmentInfo: AssessmentInfo = {
+            id: template.id,
+            title: template.title || template.name,
+            subtitle: `专业的${template.category || '评估'}工具`,
+            description: template.description || '暂无描述',
+            duration: template.duration || '15-20分钟',
+            questions: typeof template.questions === 'object' && template.questions?.count ? template.questions.count : 0,
+            icon: ClipboardList, // 默认图标
+            color: template.color || 'bg-blue-500',
+            ageRange: template.ageRange,
+            category: template.category,
+            dimensions: [], // 动态评估工具暂时没有维度信息
+            benefits: [
+              '获得个性化的评估分析报告',
+              '了解相关能力发展状况',
+              '获得针对性的改进建议',
+              '记录成长轨迹'
+            ],
+            tips: [
+              '请在安静的环境中完成评估',
+              '根据真实情况诚实回答',
+              '每个问题都请仔细思考后再选择',
+              '评估过程中可以随时暂停'
+            ]
+          }
+          setInfo(assessmentInfo)
+        } else {
+          setError('评估工具不存在')
+        }
+      } catch (err) {
+        console.error('获取评估工具信息失败:', err)
+        setError('获取评估工具信息失败')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchAssessmentInfo()
+  }, [assessmentId, hardcodedInfo])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">加载中...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !info) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">评估不存在</h2>
+          <p className="text-gray-600 mb-4">{error || '找不到指定的评估工具'}</p>
+          <Button asChild>
+            <Link href="/assessment">返回评估馆</Link>
+          </Button>
+        </div>
+      </div>
+    )
   }
 
   const IconComponent = info.icon

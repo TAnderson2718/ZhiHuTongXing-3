@@ -16,7 +16,7 @@ async function main() {
       email: 'test@example.com',
       password: testUserHashedPassword,
       name: '测试用户',
-      avatar: null,
+      image: null,
     },
   })
 
@@ -30,7 +30,8 @@ async function main() {
       email: 'admin@zhihutongxing.com',
       password: adminHashedPassword,
       name: '管理员',
-      avatar: null,
+      image: null,
+      role: 'admin',
     },
   })
 

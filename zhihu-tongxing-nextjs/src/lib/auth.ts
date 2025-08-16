@@ -270,3 +270,23 @@ export async function cleanupExpiredSessions() {
   // 在模拟环境中，这个函数不需要做任何事情
   // 因为我们使用的是基于时间戳的简单会话验证
 }
+
+// 验证管理员权限
+export async function verifyAdminAuth(request: Request) {
+  try {
+    const user = await getSessionFromRequest(request)
+
+    if (!user) {
+      return { success: false, error: '未登录', status: 401 }
+    }
+
+    if (user.role !== 'admin') {
+      return { success: false, error: '权限不足，只有管理员可以访问', status: 403 }
+    }
+
+    return { success: true, user }
+  } catch (error) {
+    console.error('Admin auth verification error:', error)
+    return { success: false, error: '认证验证失败', status: 500 }
+  }
+}

@@ -233,6 +233,7 @@ export async function POST(request: NextRequest) {
     // Verify admin authentication
     const authResult = await verifyAdminAuth(request)
     if (!authResult.success) {
+      console.log('Admin auth failed:', authResult)
       return NextResponse.json(
         { success: false, error: authResult.error },
         { status: authResult.status }
@@ -240,20 +241,25 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
+    console.log('Received POST body:', body)
     const { name, type, description, ageRange, questions, category, difficulty, estimatedTime } = body
 
     // Validate required fields
     if (!name || !type || !description) {
+      console.log('Missing required fields:', { name, type, description })
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    // 检查类型是否已存在
+    // 检查名称是否已存在（允许同类型的多个评估工具，但名称必须唯一）
+    console.log('Checking for existing template with name:', name)
     const existingTemplate = await prisma.assessmentTemplate.findFirst({
-      where: { type }
+      where: { name }
     })
+    console.log('Existing template found:', existingTemplate)
 
     if (existingTemplate) {
-      return NextResponse.json({ error: 'Assessment type already exists' }, { status: 400 })
+      console.log('Assessment name already exists, returning error')
+      return NextResponse.json({ error: 'Assessment name already exists' }, { status: 400 })
     }
 
     // 创建新的评估工具模板

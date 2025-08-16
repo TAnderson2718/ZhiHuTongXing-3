@@ -1,132 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { verifyAdminAuth } from '@/lib/auth'
 
-// Mock support data
-const mockConsultations = [
-  {
-    id: '1',
-    type: 'online',
-    user: '张女士',
-    expert: '李心理师',
-    topic: '儿童分离焦虑问题',
-    status: 'ongoing',
-    priority: 'high',
-    createdAt: '2025-01-15 14:30',
-    duration: '45分钟',
-    category: 'psychology',
-    notes: '3岁儿童入园适应问题，需要专业指导'
-  },
-  {
-    id: '2',
-    type: 'appointment',
-    user: '王先生',
-    expert: '陈教育师',
-    topic: '青春期叛逆行为管理',
-    status: 'scheduled',
-    priority: 'medium',
-    createdAt: '2025-01-14 10:15',
-    duration: '60分钟',
-    category: 'education',
-    notes: '14岁孩子行为问题，家长需要教育策略'
-  },
-  {
-    id: '3',
-    type: 'email',
-    user: '刘女士',
-    expert: '赵营养师',
-    topic: '婴儿辅食添加指导',
-    status: 'completed',
-    priority: 'low',
-    createdAt: '2025-01-13 16:45',
-    duration: '30分钟',
-    category: 'nutrition',
-    notes: '6个月婴儿辅食添加时间表和注意事项'
-  },
-  {
-    id: '4',
-    type: 'phone',
-    user: '孙女士',
-    expert: '马医师',
-    topic: '儿童发育迟缓咨询',
-    status: 'pending',
-    priority: 'high',
-    createdAt: '2025-01-12 09:20',
-    duration: '40分钟',
-    category: 'medical',
-    notes: '2岁儿童语言发育迟缓，需要专业评估'
-  }
-]
-
-const mockExperts = [
-  {
-    id: '1',
-    name: '李心理师',
-    specialty: '儿童心理',
-    status: 'online',
-    rating: 4.9,
-    experience: '8年',
-    consultations: 1250,
-    avatar: '/images/experts/expert1.jpg',
-    qualifications: ['国家二级心理咨询师', '儿童心理学硕士'],
-    workingHours: '9:00-18:00'
-  },
-  {
-    id: '2',
-    name: '陈教育师',
-    specialty: '家庭教育',
-    status: 'busy',
-    rating: 4.8,
-    experience: '12年',
-    consultations: 2100,
-    avatar: '/images/experts/expert2.jpg',
-    qualifications: ['教育学博士', '家庭教育指导师'],
-    workingHours: '8:30-17:30'
-  },
-  {
-    id: '3',
-    name: '赵营养师',
-    specialty: '儿童营养',
-    status: 'offline',
-    rating: 4.7,
-    experience: '6年',
-    consultations: 890,
-    avatar: '/images/experts/expert3.jpg',
-    qualifications: ['注册营养师', '儿童营养学硕士'],
-    workingHours: '10:00-19:00'
-  },
-  {
-    id: '4',
-    name: '马医师',
-    specialty: '儿科医学',
-    status: 'online',
-    rating: 4.9,
-    experience: '15年',
-    consultations: 3200,
-    avatar: '/images/experts/expert4.jpg',
-    qualifications: ['主治医师', '儿科学博士'],
-    workingHours: '8:00-20:00'
-  }
-]
-
-// 验证管理员权限
-async function verifyAdminAuth(request: NextRequest) {
-  try {
-    const { getSession } = await import('@/lib/auth')
-    const user = await getSession()
-
-    if (!user) {
-      return { success: false, error: '未登录', status: 401 }
-    }
-
-    if (user.role !== 'admin') {
-      return { success: false, error: '权限不足，只有管理员可以访问', status: 403 }
-    }
-
-    return { success: true, user }
-  } catch (error) {
-    console.error('Admin auth verification error:', error)
-    return { success: false, error: '认证验证失败', status: 500 }
-  }
-}
+// Support management API for consultations and experts
 
 export async function GET(request: NextRequest) {
   try {
@@ -149,70 +25,104 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category') || ''
 
     if (type === 'experts') {
-      let filteredExperts = [...mockExperts]
+      // 构建查询条件
+      const where: any = {}
 
-      // Apply filters for experts
       if (search) {
-        filteredExperts = filteredExperts.filter(expert =>
-          expert.name.toLowerCase().includes(search.toLowerCase()) ||
-          expert.specialty.toLowerCase().includes(search.toLowerCase())
-        )
+        where.OR = [
+          { name: { contains: search, mode: 'insensitive' } },
+          { specialty: { contains: search, mode: 'insensitive' } }
+        ]
       }
 
       if (status) {
-        filteredExperts = filteredExperts.filter(expert => expert.status === status)
+        where.status = status
       }
 
-      // Pagination
-      const startIndex = (page - 1) * limit
-      const endIndex = startIndex + limit
-      const paginatedExperts = filteredExperts.slice(startIndex, endIndex)
+      // 获取专家总数
+      const total = await prisma.expert.count({ where })
+
+      // 获取分页专家
+      const experts = await prisma.expert.findMany({
+        where,
+        skip: (page - 1) * limit,
+        take: limit,
+        orderBy: { createdAt: 'desc' }
+      })
 
       return NextResponse.json({
-        experts: paginatedExperts,
+        experts,
         pagination: {
           page,
           limit,
-          total: filteredExperts.length,
-          totalPages: Math.ceil(filteredExperts.length / limit)
+          total,
+          totalPages: Math.ceil(total / limit)
         }
       })
     } else {
-      let filteredConsultations = [...mockConsultations]
+      // 构建咨询查询条件
+      const where: any = {}
 
-      // Apply filters for consultations
       if (search) {
-        filteredConsultations = filteredConsultations.filter(consultation =>
-          consultation.user.toLowerCase().includes(search.toLowerCase()) ||
-          consultation.expert.toLowerCase().includes(search.toLowerCase()) ||
-          consultation.topic.toLowerCase().includes(search.toLowerCase())
-        )
+        where.OR = [
+          { topic: { contains: search, mode: 'insensitive' } },
+          { description: { contains: search, mode: 'insensitive' } }
+        ]
       }
 
       if (status) {
-        filteredConsultations = filteredConsultations.filter(consultation => consultation.status === status)
+        where.status = status
       }
 
       if (priority) {
-        filteredConsultations = filteredConsultations.filter(consultation => consultation.priority === priority)
+        where.priority = priority
       }
 
       if (category) {
-        filteredConsultations = filteredConsultations.filter(consultation => consultation.category === category)
+        where.category = category
       }
 
-      // Pagination
-      const startIndex = (page - 1) * limit
-      const endIndex = startIndex + limit
-      const paginatedConsultations = filteredConsultations.slice(startIndex, endIndex)
+      // 获取咨询总数
+      const total = await prisma.consultation.count({ where })
+
+      // 获取分页咨询，包含用户和专家信息
+      const consultations = await prisma.consultation.findMany({
+        where,
+        skip: (page - 1) * limit,
+        take: limit,
+        include: {
+          user: {
+            select: { id: true, name: true, email: true }
+          },
+          expert: {
+            select: { id: true, name: true, specialty: true }
+          }
+        },
+        orderBy: { createdAt: 'desc' }
+      })
+
+      // 转换数据格式以匹配前端期望
+      const formattedConsultations = consultations.map(consultation => ({
+        id: consultation.id,
+        type: consultation.type,
+        user: consultation.user?.name || '未知用户',
+        expert: consultation.expert?.name || '未分配专家',
+        topic: consultation.topic,
+        status: consultation.status,
+        priority: consultation.priority,
+        createdAt: consultation.createdAt.toISOString(),
+        duration: consultation.duration,
+        category: consultation.category,
+        notes: consultation.notes
+      }))
 
       return NextResponse.json({
-        consultations: paginatedConsultations,
+        consultations: formattedConsultations,
         pagination: {
           page,
           limit,
-          total: filteredConsultations.length,
-          totalPages: Math.ceil(filteredConsultations.length / limit)
+          total,
+          totalPages: Math.ceil(total / limit)
         }
       })
     }
@@ -225,41 +135,52 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Verify admin authentication
-    if (!verifyAdminAuth(request)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const authResult = await verifyAdminAuth(request)
+    if (!authResult.success) {
+      return NextResponse.json(
+        { success: false, error: authResult.error },
+        { status: authResult.status }
+      )
     }
 
     const body = await request.json()
     const { type, ...data } = body
 
     if (type === 'consultation') {
-      const { user, expert, topic, consultationType, priority, category, notes } = data
+      const { userId, expertId, topic, consultationType, priority, category, notes, description } = data
 
       // Validate required fields
-      if (!user || !expert || !topic || !consultationType) {
+      if (!userId || !expertId || !topic || !consultationType) {
         return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
       }
 
       // Create new consultation
-      const newConsultation = {
-        id: (mockConsultations.length + 1).toString(),
-        type: consultationType,
-        user,
-        expert,
-        topic,
-        status: 'pending',
-        priority: priority || 'medium',
-        createdAt: new Date().toLocaleString('zh-CN'),
-        duration: '45分钟',
-        category: category || 'general',
-        notes: notes || ''
-      }
-
-      mockConsultations.push(newConsultation)
+      const newConsultation = await prisma.consultation.create({
+        data: {
+          userId,
+          expertId,
+          type: consultationType,
+          topic,
+          description,
+          status: 'pending',
+          priority: priority || 'medium',
+          category: category || 'general',
+          notes: notes || '',
+          duration: '45分钟'
+        },
+        include: {
+          user: {
+            select: { id: true, name: true, email: true }
+          },
+          expert: {
+            select: { id: true, name: true, specialty: true }
+          }
+        }
+      })
 
       return NextResponse.json({ consultation: newConsultation }, { status: 201 })
     } else if (type === 'expert') {
-      const { name, specialty, qualifications, workingHours } = data
+      const { name, specialty, qualifications, workingHours, bio, experience } = data
 
       // Validate required fields
       if (!name || !specialty) {
@@ -267,20 +188,18 @@ export async function POST(request: NextRequest) {
       }
 
       // Create new expert
-      const newExpert = {
-        id: (mockExperts.length + 1).toString(),
-        name,
-        specialty,
-        status: 'offline',
-        rating: 0,
-        experience: '0年',
-        consultations: 0,
-        avatar: '/images/experts/default.jpg',
-        qualifications: qualifications || [],
-        workingHours: workingHours || '9:00-18:00'
-      }
-
-      mockExperts.push(newExpert)
+      const newExpert = await prisma.expert.create({
+        data: {
+          name,
+          specialty,
+          qualifications: qualifications || [],
+          workingHours: workingHours || '9:00-18:00',
+          bio: bio || '',
+          experience: experience || '0年',
+          status: 'offline',
+          rating: 0
+        }
+      })
 
       return NextResponse.json({ expert: newExpert }, { status: 201 })
     } else {
@@ -295,8 +214,12 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     // Verify admin authentication
-    if (!verifyAdminAuth(request)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const authResult = await verifyAdminAuth(request)
+    if (!authResult.success) {
+      return NextResponse.json(
+        { success: false, error: authResult.error },
+        { status: authResult.status }
+      )
     }
 
     const body = await request.json()
@@ -307,31 +230,29 @@ export async function PUT(request: NextRequest) {
     }
 
     if (type === 'consultation') {
-      const consultationIndex = mockConsultations.findIndex(consultation => consultation.id === id)
-      if (consultationIndex === -1) {
-        return NextResponse.json({ error: 'Consultation not found' }, { status: 404 })
-      }
-
       // Update consultation
-      mockConsultations[consultationIndex] = {
-        ...mockConsultations[consultationIndex],
-        ...updateData
-      }
+      const updatedConsultation = await prisma.consultation.update({
+        where: { id },
+        data: updateData,
+        include: {
+          user: {
+            select: { id: true, name: true, email: true }
+          },
+          expert: {
+            select: { id: true, name: true, specialty: true }
+          }
+        }
+      })
 
-      return NextResponse.json({ consultation: mockConsultations[consultationIndex] })
+      return NextResponse.json({ consultation: updatedConsultation })
     } else if (type === 'expert') {
-      const expertIndex = mockExperts.findIndex(expert => expert.id === id)
-      if (expertIndex === -1) {
-        return NextResponse.json({ error: 'Expert not found' }, { status: 404 })
-      }
-
       // Update expert
-      mockExperts[expertIndex] = {
-        ...mockExperts[expertIndex],
-        ...updateData
-      }
+      const updatedExpert = await prisma.expert.update({
+        where: { id },
+        data: updateData
+      })
 
-      return NextResponse.json({ expert: mockExperts[expertIndex] })
+      return NextResponse.json({ expert: updatedExpert })
     } else {
       return NextResponse.json({ error: 'Invalid type' }, { status: 400 })
     }

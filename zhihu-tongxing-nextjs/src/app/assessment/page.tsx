@@ -36,7 +36,8 @@ export default async function AssessmentPage() {
 
   // 转换数据格式以匹配前端组件需求
   const assessmentTypes = assessmentTemplates.map(template => ({
-    id: template.type,
+    id: template.id, // 使用唯一的数据库ID而不是type
+    type: template.type, // 保留type字段用于特殊路由判断
     title: template.title,
     description: template.description,
     duration: template.duration,
@@ -155,10 +156,12 @@ export default async function AssessmentPage() {
                       <div className="flex space-x-3">
                         <Button size="sm" asChild>
                           <Link href={
-                            assessment.id === 'childcare-ability' ? '/assessment/childcare-ability' :
-                            assessment.id === 'parent-child-relationship' ? '/assessment/parent-child-relationship' :
-                            assessment.id === 'parental-self-efficacy' ? '/assessment/parental-self-efficacy' :
-                            assessment.id === 'parenting-competence' ? '/assessment/parenting-competence' :
+                            // 对于特殊的评估类型，使用type作为路由
+                            assessment.type === 'childcare-ability' ? '/assessment/childcare-ability' :
+                            assessment.type === 'parent-child-relationship' ? '/assessment/parent-child-relationship' :
+                            assessment.type === 'parental-self-efficacy' ? '/assessment/parental-self-efficacy' :
+                            assessment.type === 'parenting-competence' ? '/assessment/parenting-competence' :
+                            // 对于其他评估工具，使用唯一ID作为路由
                             `/assessment/${assessment.id}/start`
                           }>
                             开始评估

@@ -89,7 +89,8 @@ export default function EditAssessmentPage() {
         setIsLoadingData(true)
 
         try {
-          const response = await fetch(`/api/admin/assessments?limit=100`, {
+          // 使用新的单个评估工具API端点
+          const response = await fetch(`/api/admin/assessments/${assessmentId}`, {
             method: 'GET',
             credentials: 'include',
             headers: {
@@ -98,29 +99,73 @@ export default function EditAssessmentPage() {
           })
 
           if (response.ok) {
-            const data = await response.json()
-            const assessment = data.assessments?.find((a: any) => a.id === assessmentId)
-
-            if (assessment) {
+            const result = await response.json()
+            if (result.success && result.data) {
+              const assessment = result.data
               setFormData({
-                name: assessment.name,
-                type: assessment.type,
-                description: assessment.description,
-                ageRange: assessment.ageRange,
-                questions: assessment.questions,
-                category: assessment.category,
-                difficulty: assessment.difficulty,
-                estimatedTime: assessment.estimatedTime,
-                status: assessment.status
+                name: assessment.name || '',
+                type: assessment.type || 'behavior',
+                description: assessment.description || '',
+                ageRange: assessment.ageRange || '',
+                questions: assessment.questions?.toString() || '',
+                category: assessment.category || 'behavior',
+                difficulty: assessment.difficulty || 'medium',
+                estimatedTime: assessment.estimatedTime || '',
+                status: assessment.status || 'draft'
               })
             } else {
-              console.error('Assessment not found')
+              console.error('Assessment not found:', result.error)
+              // Fallback to mock data
+              const mockAssessment = mockAssessments[assessmentId as keyof typeof mockAssessments]
+              if (mockAssessment) {
+                setFormData({
+                  name: mockAssessment.name,
+                  type: mockAssessment.type,
+                  description: mockAssessment.description,
+                  ageRange: mockAssessment.ageRange,
+                  questions: mockAssessment.questions,
+                  category: mockAssessment.category,
+                  difficulty: mockAssessment.difficulty,
+                  estimatedTime: mockAssessment.estimatedTime,
+                  status: mockAssessment.status
+                })
+              }
             }
           } else {
             console.error('Failed to fetch assessment data')
+            // Fallback to mock data
+            const mockAssessment = mockAssessments[assessmentId as keyof typeof mockAssessments]
+            if (mockAssessment) {
+              setFormData({
+                name: mockAssessment.name,
+                type: mockAssessment.type,
+                description: mockAssessment.description,
+                ageRange: mockAssessment.ageRange,
+                questions: mockAssessment.questions,
+                category: mockAssessment.category,
+                difficulty: mockAssessment.difficulty,
+                estimatedTime: mockAssessment.estimatedTime,
+                status: mockAssessment.status
+              })
+            }
           }
         } catch (error) {
           console.error('Error loading assessment data:', error)
+          // Fallback to mock data
+          const mockAssessment = mockAssessments[assessmentId as keyof typeof mockAssessments]
+          if (mockAssessment) {
+            setFormData({
+              name: mockAssessment.name,
+              type: mockAssessment.type,
+              description: mockAssessment.description,
+              ageRange: mockAssessment.ageRange,
+              questions: mockAssessment.questions,
+              category: mockAssessment.category,
+              difficulty: mockAssessment.difficulty,
+              estimatedTime: mockAssessment.estimatedTime,
+              status: mockAssessment.status
+            })
+          }
         } finally {
           setIsLoadingData(false)
         }
@@ -138,28 +183,34 @@ export default function EditAssessmentPage() {
     }))
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSave = async (newStatus?: string) => {
     setIsLoading(true)
 
     try {
-      const response = await fetch('/api/admin/assessments', {
+      const dataToSave = newStatus ? { ...formData, status: newStatus } : formData
+
+      const response = await fetch(`/api/admin/assessments/${assessmentId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
         },
         credentials: 'include',
-        body: JSON.stringify({
-          id: assessmentId,
-          ...formData
-        })
+        body: JSON.stringify(dataToSave)
       })
 
       if (response.ok) {
         const result = await response.json()
         console.log('Assessment updated successfully:', result)
-        // Redirect back to assessment list
-        router.push('/admin/assessment')
+
+        // 更新本地状态
+        if (newStatus) {
+          setFormData(prev => ({ ...prev, status: newStatus }))
+        }
+
+        // 如果只是状态切换，不跳转页面
+        if (!newStatus) {
+          router.push('/admin/assessment')
+        }
       } else {
         const error = await response.json()
         console.error('Error updating assessment:', error)
@@ -171,6 +222,19 @@ export default function EditAssessmentPage() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    await handleSave()
+  }
+
+  const handlePublish = async () => {
+    await handleSave('active')
+  }
+
+  const handleUnpublish = async () => {
+    await handleSave('draft')
   }
 
   const handlePreview = () => {
@@ -201,8 +265,19 @@ export default function EditAssessmentPage() {
                 返回评估管理
               </Link>
             </Button>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">编辑评估工具</h1>
+            <div className="flex-1">
+              <div className="flex items-center space-x-3">
+                <h1 className="text-2xl font-bold text-gray-900">编辑评估工具</h1>
+                <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                  formData.status === 'active'
+                    ? 'bg-green-100 text-green-800'
+                    : formData.status === 'draft'
+                    ? 'bg-yellow-100 text-yellow-800'
+                    : 'bg-gray-100 text-gray-800'
+                }`}>
+                  {formData.status === 'active' ? '已发布' : formData.status === 'draft' ? '草稿' : '归档'}
+                </span>
+              </div>
               <p className="text-gray-600">修改评估工具的基本信息和配置</p>
             </div>
           </div>
@@ -370,6 +445,40 @@ export default function EditAssessmentPage() {
                   取消
                 </Link>
               </Button>
+
+              {/* 发布状态切换按钮 */}
+              {formData.status === 'active' ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleUnpublish}
+                  disabled={isLoading}
+                  className="flex items-center text-orange-600 border-orange-600 hover:bg-orange-50"
+                >
+                  {isLoading ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Eye className="w-4 h-4 mr-2" />
+                  )}
+                  {isLoading ? '处理中...' : '取消发布'}
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handlePublish}
+                  disabled={isLoading}
+                  className="flex items-center text-green-600 border-green-600 hover:bg-green-50"
+                >
+                  {isLoading ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Eye className="w-4 h-4 mr-2" />
+                  )}
+                  {isLoading ? '发布中...' : '发布'}
+                </Button>
+              )}
+
               <Button
                 type="submit"
                 disabled={isLoading}

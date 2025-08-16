@@ -76,13 +76,63 @@ export default function EditAssessmentQuestionsPage() {
 
   useEffect(() => {
     if (adminUser) {
-      // Simulate loading assessment data
-      const loadAssessmentData = () => {
-        setTimeout(() => {
+      // Load assessment questions from API
+      const loadAssessmentData = async () => {
+        setIsLoadingData(true)
+
+        try {
+          // 获取评估工具的题目数据
+          const response = await fetch(`/api/admin/assessments/${assessmentId}/questions`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          })
+
+          if (response.ok) {
+            const result = await response.json()
+            if (result.success && result.data) {
+              const { name, type, questions: questionsData } = result.data
+
+              // 设置评估基本信息
+              setAssessment({
+                id: assessmentId,
+                name: name || 'SDQ行为评估量表',
+                questions: questionsData || []
+              })
+
+              // 转换题目数据格式
+              const formattedQuestions = questionsData.map((q: any, index: number) => ({
+                id: q.id || (index + 1).toString(),
+                text: q.content || q.text || '',
+                type: q.type === 'scale' ? 'scale' : q.type === 'text' ? 'text' : q.type === 'multiple' ? 'multiple' : 'single',
+                options: q.options || [],
+                required: q.required || false,
+                order: q.order || index + 1
+              }))
+
+              setQuestions(formattedQuestions.sort((a, b) => a.order - b.order))
+            } else {
+              console.error('Failed to load questions:', result.error)
+              // Fallback to mock data
+              setAssessment(mockAssessment)
+              setQuestions(mockAssessment.questions.sort((a, b) => a.order - b.order))
+            }
+          } else {
+            console.error('Failed to fetch questions data')
+            // Fallback to mock data
+            setAssessment(mockAssessment)
+            setQuestions(mockAssessment.questions.sort((a, b) => a.order - b.order))
+          }
+        } catch (error) {
+          console.error('Error loading questions data:', error)
+          // Fallback to mock data
           setAssessment(mockAssessment)
           setQuestions(mockAssessment.questions.sort((a, b) => a.order - b.order))
+        } finally {
           setIsLoadingData(false)
-        }, 500)
+        }
       }
 
       loadAssessmentData()
@@ -172,19 +222,50 @@ export default function EditAssessmentQuestionsPage() {
     setIsLoading(true)
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      // In real app, this would be an API call to update the assessment questions
-      console.log('Updating assessment questions:', { 
-        assessmentId, 
-        questions: questions.map(q => ({ ...q, order: q.order }))
+      // 准备题目数据
+      const questionsData = questions.map((q, index) => ({
+        id: q.id,
+        content: q.text,  // 映射 text 到 content
+        type: q.type,
+        options: q.options,
+        required: q.required,
+        order: index + 1
+      }))
+
+      console.log('Updating assessment questions:', {
+        assessmentId,
+        questions: questionsData
       })
-      
-      // Redirect back to assessment edit page
-      router.push(`/admin/assessment/edit/${assessmentId}`)
+
+      // 调用API更新题目
+      const response = await fetch(`/api/admin/assessments/${assessmentId}/questions`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          questions: questionsData
+        })
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        console.log('Assessment questions updated successfully:', result)
+
+        // 显示成功消息
+        alert('题目保存成功！')
+
+        // 重定向回评估编辑页面
+        router.push(`/admin/assessment/edit/${assessmentId}`)
+      } else {
+        const error = await response.json()
+        console.error('Error updating assessment questions:', error)
+        alert(error.error || '保存失败，请重试')
+      }
     } catch (error) {
       console.error('Error updating assessment questions:', error)
+      alert('网络错误，请重试')
     } finally {
       setIsLoading(false)
     }

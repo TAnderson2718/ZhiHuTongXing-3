@@ -11,7 +11,9 @@ import {
   ArrowLeft,
   Search,
   Users,
-  BarChart3
+  BarChart3,
+  CheckCircle,
+  XCircle
 } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import Button from '@/components/ui/button'
@@ -41,6 +43,7 @@ export default function AssessmentManagementPage() {
   const [assessmentTools, setAssessmentTools] = useState<AssessmentTool[]>([])
   const [isLoadingData, setIsLoadingData] = useState(true)
   const [error, setError] = useState('')
+  const [updatingStatus, setUpdatingStatus] = useState<string | null>(null)
 
   // 从API获取评估工具列表
   useEffect(() => {
@@ -57,12 +60,24 @@ export default function AssessmentManagementPage() {
 
         if (response.ok) {
           const data = await response.json()
+          console.log('API响应数据:', data) // 调试日志
+
           // API返回格式：{ assessments: [...], pagination: {...} }
           if (data.assessments) {
-            setAssessmentTools(data.assessments || [])
+            // 确保每个工具都有status字段
+            const toolsWithStatus = data.assessments.map((tool: any) => ({
+              ...tool,
+              status: tool.status || (tool.isActive ? 'active' : 'draft') // 确保status字段存在
+            }))
+            console.log('处理后的工具数据:', toolsWithStatus) // 调试日志
+            setAssessmentTools(toolsWithStatus)
           } else if (data.success && data.data?.assessments) {
             // 备用格式支持
-            setAssessmentTools(data.data.assessments || [])
+            const toolsWithStatus = data.data.assessments.map((tool: any) => ({
+              ...tool,
+              status: tool.status || (tool.isActive ? 'active' : 'draft')
+            }))
+            setAssessmentTools(toolsWithStatus)
           } else {
             setError(data.error || '获取评估工具列表失败')
           }
@@ -83,9 +98,9 @@ export default function AssessmentManagementPage() {
   }, [adminUser])
 
   const stats = [
-    { label: '评估工具', value: '4', icon: ClipboardList, color: 'bg-blue-100 text-blue-600' },
-    { label: '总完成次数', value: '4,890', icon: BarChart3, color: 'bg-green-100 text-green-600' },
-    { label: '活跃用户', value: '1,250', icon: Users, color: 'bg-purple-100 text-purple-600' },
+    { label: '评估工具', value: assessmentTools.length.toString(), icon: ClipboardList, color: 'bg-blue-100 text-blue-600' },
+    { label: '已发布', value: assessmentTools.filter(tool => tool.status === 'active').length.toString(), icon: CheckCircle, color: 'bg-green-100 text-green-600' },
+    { label: '草稿', value: assessmentTools.filter(tool => tool.status === 'draft').length.toString(), icon: XCircle, color: 'bg-yellow-100 text-yellow-600' },
     { label: '平均完成率', value: '87%', icon: Eye, color: 'bg-orange-100 text-orange-600' }
   ]
 
@@ -115,6 +130,46 @@ export default function AssessmentManagementPage() {
     }
     const typeInfo = typeMap[type] || { label: type, color: 'bg-gray-100 text-gray-800' }
     return <span className={`px-2 py-1 text-xs font-semibold rounded-full ${typeInfo.color}`}>{typeInfo.label}</span>
+  }
+
+  // 切换评估工具状态
+  const toggleAssessmentStatus = async (toolId: string, currentStatus: string) => {
+    console.log('切换状态:', { toolId, currentStatus }) // 调试日志
+    setUpdatingStatus(toolId)
+    try {
+      const newStatus = currentStatus === 'draft' ? 'active' : 'draft'
+
+      const response = await fetch('/api/admin/assessments', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          id: toolId,
+          status: newStatus
+        })
+      })
+
+      if (response.ok) {
+        // 更新本地状态
+        setAssessmentTools(prev => prev.map(tool =>
+          tool.id === toolId
+            ? { ...tool, status: newStatus }
+            : tool
+        ))
+        console.log('状态更新成功:', { toolId, newStatus }) // 调试日志
+      } else {
+        const error = await response.json()
+        console.error('状态更新失败:', error) // 调试日志
+        alert(error.error || '状态更新失败')
+      }
+    } catch (error) {
+      console.error('Error updating status:', error)
+      alert('网络错误，请重试')
+    } finally {
+      setUpdatingStatus(null)
+    }
   }
 
   const filteredTools = assessmentTools.filter(tool => {
@@ -229,6 +284,28 @@ export default function AssessmentManagementPage() {
           </div>
         </Card>
 
+        {/* 调试信息面板 (开发环境显示) */}
+        {process.env.NODE_ENV === 'development' && (
+          <Card className="p-4 mb-6 bg-yellow-50 border-yellow-200">
+            <h3 className="text-sm font-medium text-yellow-800 mb-2">🔧 调试信息</h3>
+            <div className="text-xs text-yellow-700 space-y-1">
+              <p>评估工具数量: {assessmentTools.length}</p>
+              <p>已发布: {assessmentTools.filter(tool => tool.status === 'active').length}</p>
+              <p>草稿: {assessmentTools.filter(tool => tool.status === 'draft').length}</p>
+              <p>管理员用户: {adminUser ? '已登录' : '未登录'}</p>
+              <p>数据加载状态: {isLoadingData ? '加载中' : '已完成'}</p>
+              {assessmentTools.length > 0 && (
+                <div>
+                  <p>示例工具数据:</p>
+                  <pre className="text-xs bg-yellow-100 p-2 rounded mt-1">
+                    {JSON.stringify(assessmentTools[0], null, 2)}
+                  </pre>
+                </div>
+              )}
+            </div>
+          </Card>
+        )}
+
         {/* Assessment Tools List */}
         <Card className="p-6">
           <div className="flex justify-between items-center mb-6">
@@ -298,6 +375,25 @@ export default function AssessmentManagementPage() {
                           <Link href={`/admin/assessment/preview/${tool.id}`}>
                             <Eye className="w-4 h-4" />
                           </Link>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => toggleAssessmentStatus(tool.id, tool.status)}
+                          disabled={updatingStatus === tool.id}
+                          className={tool.status === 'draft'
+                            ? "text-green-600 border-green-600 hover:bg-green-50"
+                            : "text-yellow-600 border-yellow-600 hover:bg-yellow-50"
+                          }
+                          title={`当前状态: ${tool.status}, 点击${tool.status === 'draft' ? '发布' : '取消发布'}`}
+                        >
+                          {updatingStatus === tool.id ? (
+                            <div className="w-4 h-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                          ) : tool.status === 'draft' ? (
+                            <CheckCircle className="w-4 h-4" />
+                          ) : (
+                            <XCircle className="w-4 h-4" />
+                          )}
                         </Button>
                         <Button variant="outline" size="sm" className="text-red-600 border-red-600 hover:bg-red-50">
                           <Trash2 className="w-4 h-4" />

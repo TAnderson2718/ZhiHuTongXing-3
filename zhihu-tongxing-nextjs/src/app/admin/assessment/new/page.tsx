@@ -38,9 +38,9 @@ export default function NewAssessmentPage() {
       const response = await fetch('/api/admin/assessments', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer mock-admin-token'
+          'Content-Type': 'application/json'
         },
+        credentials: 'include',
         body: JSON.stringify({
           ...formData,
           questions: parseInt(formData.questions) || 0
@@ -71,9 +71,9 @@ export default function NewAssessmentPage() {
       const response = await fetch('/api/admin/assessments', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer mock-admin-token'
+          'Content-Type': 'application/json'
         },
+        credentials: 'include',
         body: JSON.stringify({
           ...formData,
           questions: parseInt(formData.questions) || 0

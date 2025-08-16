@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSession } from '@/lib/auth'
+import { getSession, verifyAdminAuth } from '@/lib/auth'
 import { logOperation } from '@/lib/operation-log'
-import { 
-  Video, 
-  VideoListQuery, 
-  VideoListResponse, 
+import { prisma } from '@/lib/prisma'
+import {
+  Video,
+  VideoListQuery,
+  VideoListResponse,
   VideoStats,
   VideoCategory,
-  VIDEO_CATEGORIES 
+  VIDEO_CATEGORIES
 } from '@/types/video'
 
 // 模拟视频数据存储
@@ -101,29 +102,65 @@ async function verifyAdminAuth(request: NextRequest) {
 }
 
 // 生成视频统计数据
-function generateVideoStats(): VideoStats {
-  const totalVideos = videosData.length
-  const totalSize = videosData.reduce((sum, video) => sum + video.size, 0)
-  const totalDuration = videosData.reduce((sum, video) => sum + (video.duration || 0), 0)
-  const totalViews = videosData.reduce((sum, video) => sum + video.views, 0)
-  
-  const categoryCounts = Object.keys(VIDEO_CATEGORIES).reduce((counts, category) => {
-    counts[category as VideoCategory] = videosData.filter(v => v.category === category).length
-    return counts
-  }, {} as Record<VideoCategory, number>)
-  
-  const formatCounts = videosData.reduce((counts, video) => {
-    counts[video.format] = (counts[video.format] || 0) + 1
+async function generateVideoStats(): Promise<VideoStats> {
+  const totalVideos = await prisma.video.count()
+  const totalSizeResult = await prisma.video.aggregate({
+    _sum: { size: true }
+  })
+  const totalDurationResult = await prisma.video.aggregate({
+    _sum: { duration: true }
+  })
+  const totalViewsResult = await prisma.video.aggregate({
+    _sum: { views: true }
+  })
+
+  const totalSize = totalSizeResult._sum.size || 0
+  const totalDuration = totalDurationResult._sum.duration || 0
+  const totalViews = totalViewsResult._sum.views || 0
+
+  // 获取分类统计
+  const categoryCounts = {} as Record<VideoCategory, number>
+  for (const category of Object.keys(VIDEO_CATEGORIES)) {
+    const count = await prisma.video.count({
+      where: { category }
+    })
+    categoryCounts[category as VideoCategory] = count
+  }
+
+  // 获取格式统计
+  const formatResults = await prisma.video.groupBy({
+    by: ['format'],
+    _count: { format: true }
+  })
+  const formatCounts = formatResults.reduce((counts, result) => {
+    counts[result.format] = result._count.format
     return counts
   }, {} as Record<string, number>)
-  
-  const recentUploads = [...videosData]
-    .sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())
-    .slice(0, 5)
-  
-  const popularVideos = [...videosData]
-    .sort((a, b) => b.views - a.views)
-    .slice(0, 5)
+
+  // 获取最近上传的视频
+  const recentUploads = await prisma.video.findMany({
+    orderBy: { createdAt: 'desc' },
+    take: 5,
+    select: {
+      id: true,
+      title: true,
+      createdAt: true,
+      size: true,
+      duration: true
+    }
+  })
+
+  // 获取热门视频
+  const popularVideos = await prisma.video.findMany({
+    orderBy: { views: 'desc' },
+    take: 5,
+    select: {
+      id: true,
+      title: true,
+      views: true,
+      duration: true
+    }
+  })
   
   return {
     totalVideos,
@@ -164,53 +201,70 @@ export async function GET(request: NextRequest) {
       sortOrder: (searchParams.get('sortOrder') as 'asc' | 'desc') || 'desc'
     }
     
-    // 过滤视频
-    let filteredVideos = [...videosData]
-    
-    // 搜索过滤
+    // 构建查询条件
+    const where: any = {}
+
     if (query.search) {
-      const searchLower = query.search.toLowerCase()
-      filteredVideos = filteredVideos.filter(video =>
-        video.title.toLowerCase().includes(searchLower) ||
-        video.description?.toLowerCase().includes(searchLower) ||
-        video.tags.some(tag => tag.toLowerCase().includes(searchLower))
-      )
+      where.OR = [
+        { title: { contains: query.search, mode: 'insensitive' } },
+        { description: { contains: query.search, mode: 'insensitive' } }
+      ]
     }
-    
-    // 分类过滤
+
     if (query.category) {
-      filteredVideos = filteredVideos.filter(video => video.category === query.category)
+      where.category = query.category
     }
-    
-    // 可见性过滤
+
     if (query.visibility !== 'all') {
-      filteredVideos = filteredVideos.filter(video => video.visibility === query.visibility)
+      where.visibility = query.visibility
     }
-    
-    // 排序
-    filteredVideos.sort((a, b) => {
-      const aValue = a[query.sortBy!] as any
-      const bValue = b[query.sortBy!] as any
-      
-      if (query.sortOrder === 'asc') {
-        return aValue > bValue ? 1 : -1
-      } else {
-        return aValue < bValue ? 1 : -1
+
+    // 获取视频总数
+    const total = await prisma.video.count({ where })
+
+    // 获取分页视频
+    const videos = await prisma.video.findMany({
+      where,
+      skip: (query.page! - 1) * query.limit!,
+      take: query.limit!,
+      orderBy: {
+        [query.sortBy!]: query.sortOrder
       }
     })
-    
-    // 分页
-    const total = filteredVideos.length
+
+    // 转换数据格式以匹配前端期望
+    const formattedVideos = videos.map(video => ({
+      id: video.id,
+      title: video.title,
+      description: video.description,
+      filename: video.filename,
+      originalName: video.originalName,
+      url: video.url,
+      thumbnailUrl: video.thumbnailUrl,
+      size: video.size,
+      duration: video.duration,
+      format: video.format,
+      resolution: video.resolution,
+      bitrate: video.bitrate,
+      category: video.category,
+      tags: Array.isArray(video.tags) ? video.tags : [],
+      visibility: video.visibility,
+      status: video.status,
+      views: video.views,
+      usageCount: video.usageCount,
+      uploadedBy: video.uploadedBy,
+      uploadedAt: video.createdAt.toISOString(),
+      createdAt: video.createdAt.toISOString(),
+      updatedAt: video.updatedAt.toISOString()
+    }))
+
     const totalPages = Math.ceil(total / query.limit!)
-    const startIndex = (query.page! - 1) * query.limit!
-    const endIndex = startIndex + query.limit!
-    const paginatedVideos = filteredVideos.slice(startIndex, endIndex)
     
     // 生成统计数据
-    const stats = generateVideoStats()
-    
+    const stats = await generateVideoStats()
+
     const response: VideoListResponse = {
-      videos: paginatedVideos,
+      videos: formattedVideos,
       pagination: {
         page: query.page!,
         limit: query.limit!,
